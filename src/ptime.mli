@@ -1,0 +1,441 @@
+(*---------------------------------------------------------------------------
+   Copyright 2015 Daniel C. Bünzli. All rights reserved.
+   Distributed under the BSD3 license, see license at the end of the file.
+   %%NAME%% release %%VERSION%%
+  ---------------------------------------------------------------------------*)
+
+(** POSIX time.
+
+    [Ptime] has platform independent support for POSIX time. It
+    provides a {{!t}type} to represent a well-defined range of POSIX
+    timestamps, conversion with {{!date_time}date-time values},
+    conversion with {{!rfc3339}RFC 3339 timestamps} and
+    {{!print}pretty printing} to a human-readable, locale-independent
+    representation.
+
+    [Ptime] is not a calendar library.
+
+    Consult the {{!basics}basics} and a few {{!notes}notes
+    and limitations}.
+
+    {b References}
+    {ul
+    {- The Open Group. {{:http://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap04.html#tag_04_15}The Open Group Base Specifications Issue 7, section 4.15 Seconds Since the Epoch}. 2013}
+    {- G. Klyne et al.
+    {{:http://tools.ietf.org/html/rfc3339}
+    {e Date and Time on the Internet: Timestamps}}. RFC 3339, 2002}}
+
+    {e Release %%VERSION%% - %%MAINTAINER%% } *)
+
+(** {1:timestamps POSIX timestamps} *)
+
+open Rresult
+
+type t
+(** The type for {{!posix_time}POSIX timestamps} in the range
+    \[{!min};{!max}\]. Note that POSIX timestamps are
+    by definition always on the UTC timeline. *)
+
+val epoch : t
+(** [epoch] is 1970-01-01 00:00:00 UTC. *)
+
+val min : t
+(** [min] is 0000-01-01 00:00:00 UTC, the earliest timestamp
+    representable by [Ptime]. *)
+
+val max : t
+(** [max] is 9999-12-31 23:59:59 UTC, the latest timestamp
+    representable by [Ptime]. *)
+
+val of_posix_s : float -> t option
+(** [of_posix_s d] is the POSIX timestamp that:
+    {ul
+    {- Happens [d] POSIX seconds {e after} {!epoch} if [d] is positive.}
+    {- Happens [d] POSIX seconds {e before} {!epoch} if [d] is negative.}}
+    [None] is returned if the timestamp is not in the range
+    \[{!min};{!max}\]. *)
+
+val to_posix_s : t -> float
+(** [to_posix_s t] is the signed number of POSIX seconds that happen
+    between [t] and {!epoch}:
+    {ul
+    {- If the number is positive [t] happens {e after} {!epoch}.}
+    {- If the number is negative [t] happens {e before} {!epoch}.}} *)
+
+(** {1:predicates Predicates} *)
+
+val equal : t -> t -> bool
+(** [equal t t'] is [true] iff [t] and [t'] are the same timestamps. *)
+
+val compare : t -> t -> int
+(** [compare t t'] is a total order on timestamps that is compatible
+    with timeline order. *)
+
+val is_earlier : t -> than:t -> bool
+(** [is_earlier t ~than] is [true] iff [compare t than = -1]. *)
+
+val is_later : t -> than:t -> bool
+(** [is_later t than] is [true] iff [compare t than = 1]. *)
+
+(** {1:posix_arithmetic POSIX arithmetic}
+
+    {b WARNING.} A POSIX second is not equal to an SI second, see
+    the {{!basics}basics}. Do not use these functions to perform
+    calendar arithmetic or measure wall-clock durations, you will fail. *)
+
+val add_posix_s : t -> float -> t option
+(** [add_posix_s t d] is timestamp [t + d], that is [t] with [d]
+    signed POSIX seconds added. [None] is returned if the result is
+    not in the range \[{!min};{!max}\]. *)
+
+val sub_posix_s : t -> float -> t option
+(** [sub_posix_s t d] is the timestamp [t - d], that is [t] with [d]
+    signed POSIX seconds subtracted. [None] is returned if the result
+    is not in the range \[{!min};{!max}\]. *)
+
+val diff_posix_s : t -> t -> float
+(** [diff_posix_s t t'] is the signed number of POSIX seconds [t - t'] that
+    happens between the timestamps [t] and [t']. *)
+
+(** {1:tz_offset Time zone offsets between local and UTC timelines} *)
+
+type tz_offset_s = int
+(** The type for time zone offsets between local and UTC timelines
+    in seconds.
+
+    This is the signed difference in seconds between the local
+    timeline and the UTC timeline:
+    {ul
+    {- A value of [-3600] means that the local timeline is sixty minutes
+       {e behind} the UTC timeline. We need to add 3600 seconds to the
+       local timeline to get on the UTC timeline.}
+    {- A value of [3600] means that the local timeline is sixty
+       minutes {e ahead} the UTC timeline. We need to subtract 3600 seconds
+       to the local timeline to get on the UTC timeline.}} *)
+
+(** {1:date_time Date-time value conversions}
+
+    A {e date-time} represents a point on the UTC timeline by pairing
+    a date in the proleptic Gregorian calendar and a second precision
+    daytime in a local timeline with stated relationship to the UTC
+    timeline. *)
+
+type date = int * int * int
+(** The type for big-endian proleptic Gregorian dates. A triple
+    [(y, m, d)] with:
+    {ul
+    {- [y] the year from [0] to [9999]. [0] denotes -1 BCE
+       (this follows the
+       {{:http://www.iso.org/iso/home/standards/iso8601.htm}ISO 8601}
+       convention).}
+    {- [m] is the month from [1] to [12]}
+    {- [d] is the day from [1] to [28], [29], [30] or [31]
+       depending on [m] and [y]}}
+
+    A date is said to be {e valid} iff the values [(y, m, d)] are
+    in the range mentioned above and represent an existing date in the
+    proleptic Gregorian calendar. *)
+
+type time = (int * int * int) * tz_offset_s
+(** The type for daytimes on a local timeline. Pairs a triple [(hh,
+    mm, ss)] denoting the time on the local timeline and a [tz_offset]
+    stating the {{!tz_offset_s}relationship} of the local timeline to
+    the UTC timeline.
+
+    The [(hh, mm, ss)] components are understood and constrainted as
+    follows:
+    {ul
+    {- [hh] is the hour from [0] to [23].}
+    {- [mm] is the minute from [0] to [59].}
+    {- [ss] is the seconds from [0] to [60]. [60] may happen whenever
+       a leap second is added.}}
+    A [time] value is said to be {e valid} iff the values [(hh, mm, ss)]
+    are in the ranges mentioned above. *)
+
+val of_date_time : date * time -> t option
+(** [of_date_time dt] is the POSIX timestamp corresponding to
+    date-time [dt] or [None] if [dt] has an {{!date}invalid date},
+    {{!time}invalid time} or the date-time is not in the range
+    \[{!min};{!max}\].
+
+    {b Leap seconds.} Any date-time with a seconds value of [60], hence
+    representing a leap second addition, is mapped to the date-time
+    that happens 1 second later. Any date-time with a seconds value of
+    [59] is mapped to the POSIX timestamp that represents this
+    instant, if a leap second was subtracted at that point, this is
+    the POSIX timestamp that represents this inexisting instant. See
+    the {{!basics}basics}. *)
+
+val to_date_time : ?tz_offset_s:int -> t -> date * time
+(** [to_date_time tz_offset t] is the date-time of the timestamp [t].
+
+    [tz_offset] hints the time zone offset used for the resulting
+    daytime component (defaults to [0], i.e. UTC). The offset is not
+    honoured and fallbacks to [0] in case the resulting date-time
+    rendering of the timestamp would yield an {{!date}invalid
+    date}. This means that you should always interpret the resulting
+    time component with the time zone offset it is paired with and not
+    assume it will be the one you gave to the function. Note that for
+    real-world time zone offsets the fallback to [0] will only happen
+    around {!Ptime.min} and {!Ptime.max}.  Formally the fallback
+    occurs whenever {!add_posix_s} [t tz_offset_s] is [None].
+
+    {b Leap seconds.} No POSIX timestamp can represent a date-time
+    with a leap second added, hence this function will never return a
+    date-time with a [60] seconds value. This function does return
+    inexisting UTC date-times with [59] seconds whenever a leap second is
+    subtracted since POSIX timestamps do represent them. See the
+    {{!basics}basics}.
+
+    {b Subsecond precision.} POSIX timestamps with subsecond precision
+    are floored, i.e. the date-time always has the second mentioned in
+    the timestamp. *)
+
+val of_date : date -> t option
+(** [of_date d] is [of_date_time (d, ((00, 00, 00), 0 (* UTC *)))]. *)
+
+val to_date : t -> date
+(** [to_date t] is [fst (to_date_time t)]. *)
+
+(** {1:rfc3339 RFC 3339 timestamp conversions} *)
+
+type error_range = int * int
+(** The type for error ranges, starting and ending index in a string. *)
+
+type rfc3339_error =
+  [ `Invalid_stamp
+  | `Eoi
+  | `Exp_chars of char list
+  | `Trailing_input ]
+(** The type for RFC 3339 timestamp parsing errors.  [`Invalid_stamp]
+    means that either the time stamp is not in the range
+    \[{!min};{!max}\], or the date is invalid, or one of the fields is
+    not in the right range. *)
+
+val pp_rfc3339_error : Format.formatter -> rfc3339_error -> unit
+(** [pp_rfc3339_error ppf e] prints an unspecified representation of
+    [e] on [ppf]. *)
+
+val rfc3339_error_to_msg : ('a, [`RFC3339 of error_range * rfc3339_error])
+    result -> ('a, [> `Msg of string]) result
+(** [rfc3339_error_to_msg r] converts RFC 3339 parse errors to error
+    messages. *)
+
+val of_rfc3339 : ?last:int ref -> ?strict:bool -> ?pos:int -> ?len:int ->
+  string ->
+  ((t * tz_offset_s), [> `RFC3339 of error_range * rfc3339_error]) result
+(** [of_rfc3339 ~pos ~len s] parses a RFC 3339
+    {{:https://tools.ietf.org/html/rfc3339#section-5.6}[date-time]}
+    production in the range [(pos, pos + len]) of [s] to a pair
+    [(t, tz)] with:
+    {ul
+    {- [t] the POSIX timestamp (hence on the UTC timeline).}
+    {- [tz], the {{!tz_offset_s}timezone offset} found in the timestamp.}}
+
+    [last], if provided the parsing doesn't fail with
+    [`Trailing_input] if the input range is not exhausted, it stops
+    and the end position of the timestamp is written to [last]. [pos]
+    defaults to [0] and [len] to [String.length s]. If [strict] is
+    [true] (defaults to [false]) the parsing function errors on
+    timestamps with lowercase ['T'] or ['Z'] characters or space
+    separated date and times.
+
+    {b Limitations.} RFC 3339 allows a few degenerate timestamps with
+    non-zero time zone offsets to be parsed at the boundaries that
+    correspond to timestamps that cannot be expressed in UTC in RFC
+    3339 itself (e.g. [0000-01-01T00:00:00+00:01]), the function
+    errors on these timestamps with [`Invalid_stamp]. Leap seconds are
+    allowed on any date-time and handled as in {!of_date_time}.
+
+    @raise Invalid_argument if [pos] and [len] do not designate
+    a {{!String}valid substring} of [s]. *)
+
+val to_rfc3339 : ?space:bool -> ?frac:int -> ?tz_offset_s:tz_offset_s ->
+  t -> string
+(** [to_rfc3339_tz ~space ~frac ~tz_offset_s t] formats the timestamp
+    [t] according to a RFC 3339
+    {{:https://tools.ietf.org/html/rfc3339#section-5.6}[date-time]}
+    production with:
+    {ul
+    {- [tz_offset_s] hints the timezone offset to use (defaults to [0], i.e.
+       UTC). The hint is ignored and [0] is used in the following cases:
+       if [tz_offset_s] is not an integral number of minutes and its magnitude
+       not in the range permitted by the standard, if
+       {!add_posix_s} [t tz_offset_s] is [None] (the resulting timestamp
+       rendering would not be RFC 3339 compliant).}
+    {- [frac] in the the range \[[0];[9]\] specifies that exactly
+       [frac]th decimal digits of the fractional second of [t] are
+       rendered (defaults to [0]).}
+    {- [space] if [true] the date and time separator is a space
+       rather than a ['T'] (not recommended, defaults to [false]).}}
+
+    @raise Invalid_argument if [frac] is not in the range \[[0];[9]\] *)
+
+val pp_rfc3339 : ?space:bool -> ?frac:int -> ?tz_offset_s:tz_offset_s ->
+  unit -> Format.formatter -> t -> unit
+(** [pp_rfc3339 ?space ?frac ?tz_offset_s () ppf t] is [Format.fprintf ppf "%s"
+    (to_rfc3339 ?space ?frac ?tz_offset_s t)]. *)
+
+(** {1:print Pretty printing} *)
+
+val pp : ?frac:int -> ?tz_offset_s:tz_offset_s -> unit -> Format.formatter ->
+  t -> unit
+(** [pp ~frac ~tz_offset_s () ppf t] prints an unspecified, human readable,
+    locale-independent, representation of [t] with:
+    {ul
+    {- [tz_offset_s] hints the timezone offset to use (defaults to [0], i.e.
+       UTC). The hint is ignored and [0] is used in the following cases:
+       if [tz_offset_s] is not an integral number of minutes and its magnitude
+       not in the range permitted by the standard, if
+       {!add_posix_s} [t tz_offset_s] is [None]}
+    {- [frac] in the the range \[[0];[9]\] specifies that exactly
+       [frac]th decimal digits of the fractional second of [t] are
+       rendered (defaults to [0]).}}
+
+    {b Note.} The output of this function is similar to but {b not}
+    compliant with RFC 3339, it should only be used for presentation,
+    not as a serialization format.
+
+    @raise Invalid_argument if [frac] is not in the range \[[0];[9]\] *)
+
+(**/**)
+val pp_top : Format.formatter -> t -> unit
+(**/**)
+
+(** {1:basics Basics}
+
+    POSIX time counts {{!posix_seconds}POSIX seconds} since the epoch
+    1970-01-01 00:00:00 UTC. As such a POSIX timestamp is {b always}
+    on the UTC timeline.
+
+    POSIX time doesn't count leap seconds, so by definition it cannot
+    represent them. One way of viewing this is that whenever a leap
+    second is added a POSIX second lasts two SI seconds and whenever a
+    leap second is subtracted a POSIX second lasts zero SI second.
+
+    [Ptime] does not provide any mean to convert the duration between
+    two POSIX timestamps to SI seconds. The reason is that in order to
+    accurately find this number, a
+    {{:http://www.ietf.org/timezones/data/leap-seconds.list}leap
+    second table} is needed. However since this table may change every
+    six months, [Ptime] decides not to include it so as not to
+    potentially become incorrect every six months.
+
+    This decision has the following implications. First it should be
+    realised that the durations mentioned by the {!add_posix_s},
+    {!sub_posix_s} and {!diff_posix_s} functions are expressed in {e
+    POSIX seconds} which may represent zero, one, or two SI
+    seconds. For example if we add 1 second with
+    {!add_posix_s} to the POSIX timestamp for 1998-12-31 23:59:59 UTC,
+    what we get is the timestamp for 1999-01-01 00:00:00 UTC:
+{[
+let get = function None -> assert false | Some v -> v
+let utc d t = get @@ Ptime.of_date_time (d, (t, 0 (* UTC *)))
+let t0 = utc (1998, 12, 31) (23, 59, 59)
+let t1 = utc (1999, 01, 01) (00, 00, 00)
+let () = assert (Ptime.equal (some @@ Ptime.add_posix_s t0 1.) t1)
+]}
+    However since the leap second 1998-12-31 23:59:60 UTC exists,
+    {e two} actual SI seconds elapsed between [t0] and [t1]. Now if we use
+    {!diff_posix_s} to find the POSIX duration that elapsed between
+    [t0] and [t1] we get one POSIX second:
+{[
+let () = assert ((Ptime.diff_posix_s t1 t0) = 1.)
+]}
+    But still, two SI seconds elapsed between these two points in
+    time. Note also that no value of type {!t} can represent the UTC
+    timetamp 1998-12-31 23:59:60 and hence {!Ptime.to_date_time}
+    will never return a date-time with a seconds value of [60]. In
+    fact both 1998-12-31 23:59:60 UTC and 1999-01-01 00:00:00 UTC are
+    represented by the same timestamp:
+{[
+let t2 = utc (1998, 12, 31) (23, 59, 60)
+let () = assert (Ptime.equal t1 t2)
+]}
+    This is true of any added leap second, we map it on the first second
+    of the next minute, thus matching the behaviour
+    of POSIX's
+    {{:http://pubs.opengroup.org/onlinepubs/9699919799/functions/mktime.html}
+     mktime} function.
+
+    If a leap second is subtracted on a day the following occurs –
+    2015, as of writing this never happened. Let YYYY-06-30 23:59:58
+    be the instant a leap second is subtracted, this means that the
+    next UTC date-time, one SI second later, is YYYY-07-01
+    00:00:00. However if we diff the two instants:
+{[
+let y = 9999 (* hypothetical year were this happens *)
+let t0 = utc (y, 06, 30) (23, 59, 58)
+let t1 = utc (y, 07, 01) (00, 00, 00)
+let () = assert (Ptime.diff_posix_s t1 t0 = 2.)
+]}
+    We get two POSIX seconds, but only one SI second
+    elapsed between these two points in time. It should also
+    be noted that POSIX time will represent a point that never
+    existed in time namely YYYY-06-30 23:59:59, the POSIX second
+    with 0 SI second duration and that {!Ptime.to_date_time}
+    will return a date-time value for this timestamp even though
+    it never existed:
+{[
+let t2 = utc (y, 06, 30) (23, 59, 59)
+let () = assert (Ptime.equal (get @@ Ptime.add_posix_s t0 1.) t2)
+]}
+
+    {1:notes Notes and limitations}
+
+    The following points should be taken into account
+    {ul
+    {- [Ptime] is not a calendar library and will never be.}
+    {- [Ptime] can only represent timestamps in the range
+       \[{!Ptime.min};{!Ptime.max}\]. It is however able to convert {e any}
+       of these timestamps to a valid date-time or RFC 3339 timestamp.}
+    {- The values taken by {!of_posix_s} and returned by {!to_posix_s}
+       are compatible with the representation returned by
+       {!Unix.gettimeofday}.}
+    {- POSIX time in general is ill-suited to measure wall-clock
+       time spans for the following reasons.
+       {ul
+       {- POSIX time counts time in POSIX seconds. POSIX
+          seconds can represent 2, 1 or 0 SI seconds. [Ptime]
+          offers no mechanism to determine the duration of a POSIX second,
+          see the {{!basics}basics}.}
+       {- The POSIX timestamps returned by your platform are not
+          monotonic: they are subject to operating system time
+          adjustements and can even go back in time.  If you need to
+          measure time spans in a single program run use a monotonic
+          time source (e.g. {!Mtime}).}}}}
+*)
+
+
+(*---------------------------------------------------------------------------
+   Copyright 2015 Daniel C. Bünzli.
+   All rights reserved.
+
+   Redistribution and use in source and binary forms, with or without
+   modification, are permitted provided that the following conditions
+   are met:
+
+   1. Redistributions of source code must retain the above copyright
+      notice, this list of conditions and the following disclaimer.
+
+   2. Redistributions in binary form must reproduce the above
+      copyright notice, this list of conditions and the following
+      disclaimer in the documentation and/or other materials provided
+      with the distribution.
+
+   3. Neither the name of Daniel C. Bünzli nor the names of
+      contributors may be used to endorse or promote products derived
+      from this software without specific prior written permission.
+
+   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+  ---------------------------------------------------------------------------*)

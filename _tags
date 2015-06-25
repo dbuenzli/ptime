@@ -1,0 +1,8 @@
+<**/*.{ml,mli}> : bin_annot, debug, safe_string, package(rresult)
+
+<src> : include
+<src/ptime_top*> : package(compiler-libs.toplevel)
+
+<test> : include
+<test/*> : package(rresult)
+<test/test_unix*> : package(unix)
