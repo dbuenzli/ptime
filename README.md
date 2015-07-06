@@ -16,7 +16,7 @@ BSD3 license.
 [1]: http://tools.ietf.org/html/rfc3339
 [2]: http://erratique.ch/software/rresult
 
-Home page: http://erratique.ch/software/ptime  
+Home page: http://erratique.ch/software/ptime  
 Contact: Daniel Bünzli `<daniel.buenzl i@erratique.ch>`
 
 ## Installation
