@@ -28,7 +28,8 @@ let stamp_of_date_time =
   Ptime.of_date_time $ raw_date_time @-> ret_get_option raw_stamp
 
 let stamp_of_s =
-  (Ptime.of_posix_s $ pp_float @-> ret_get_option raw_stamp)
+  let of_posix_s s = Ptime.(of_span (Span.of_s s)) in
+  (of_posix_s $ pp_float @-> ret_get_option raw_stamp)
 
 let stamp_conversions =
   let dt ?space ?frac ?tz_offset_s dt =
@@ -77,7 +78,9 @@ let stamp_conversions =
     (stamp ~frac:0 (stamp_of_s ( 2.)));
   eq_str "1969-12-31T23:59:58Z"
     (stamp ~frac:0 (stamp_of_s (-2.)));
-  app_raises ~pp:pp_str (stamp ~frac:10) Ptime.epoch;
+  eq_str "9999-12-31T23:59:59.999999999999Z" (stamp ~frac:12 Ptime.max);
+  eq_str "0000-01-01T00:00:00.000000000000Z" (stamp ~frac:12 Ptime.min);
+  app_raises ~pp:pp_str (stamp ~frac:13) Ptime.epoch;
   app_raises ~pp:pp_str (stamp ~frac:(-1)) Ptime.epoch;
   ()
 
@@ -144,10 +147,11 @@ let parse =
 let stamp_trips =
   test "Random stamps to RFC 3339 round trips" @@ fun () ->
   let stamp_of_posix_s =
-    Ptime.of_posix_s $ pp_float @-> (ret_get_option raw_stamp)
+    let of_posix_s s = Ptime.(of_span (Span.of_s s)) in
+    of_posix_s $ pp_float @-> (ret_get_option raw_stamp)
   in
   let trip ?tz_offset_s t =
-    let back = stamp_of_posix_s (floor (Ptime.to_posix_s t)) in
+    let back = stamp_of_posix_s (floor (Ptime.(Span.to_s (to_span t)))) in
     let trip, _ = stamp_of_rfc3339 (Ptime.to_rfc3339 ?tz_offset_s t) in
     eq_stamp back trip
   in

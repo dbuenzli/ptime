@@ -10,6 +10,12 @@ open Rresult
 
 let strf = Format.asprintf
 
+let err_span_float d max =
+  strf "integral part of (abs_float %g) not in range [0;%g]" d max
+
+let err_span_d_ps d ps ps_max =
+  strf "picosecond count of (%d,%Ld) not in range [0;%Ld]" d ps ps_max
+
 let err_sub ~pos ~len ~slen =
   strf "invalid substring pos:%d len:%d string length:%d" pos len slen
 
@@ -50,39 +56,131 @@ let jd_of_date (year, month, day) =
 
 let jd_posix_epoch = 2_440_588          (* the Julian day of the POSIX epoch *)
 let jd_ptime_min = 1_721_060                  (* the Julian day of Ptime.min *)
+let jd_ptime_max = 5_373_484                  (* the Julian day of Ptime.max *)
 
-(* POSIX timestamps
+(* Picosecond precision POSIX timestamps and span representation.
 
-   Internally we store them as milliseconds since the epoch using an
-   IEEE double floating point value. All milliseconds on Ptime's
-   [min;max] range are at least in [-2^53;2^53] and hence represented
-   exactly. *)
+   POSIX timestamps and spans are represented by int * int64 pairs
+   with the int64 in the range [0L;86_399_999_999_999_999L]. A pair
+   [(d, ps)] denotes the POSIX picosecond duration [d] * 86_400e12 +
+   [ps].
 
-type t = float (* milliseconds since the epoch *)
+   For a timestamp this can be seen as a POSIX day count from the
+   epoch paired with a picosecond precision POSIX time point in that
+   day starting from 00:00:00.
 
-let epoch = 0.
-let min = -62_167_219_200_000. (* 0000-01-01 00:00:00 UTC *)
-let max = 253_402_300_799_000. (* 9999-12-31 23:59:59 UTC *)
+   By definition with a negative [d] the [ps] duration brings us
+   towards zero, *not* towards infinity:
 
-let to_posix_ms t = t
-let of_posix_ms t =
-  if t < min || t > max || t <> t (* nan *) then None else Some t
 
-let to_posix_s t = (to_posix_ms t) *. 1e-3
-let of_posix_s t = of_posix_ms (t *. 1e3)
+         (d * 86_400e12) (s * 86_400e12 + ps)       0
+     ... -----+-----------------+-------------------+--------- ...
+              [---------------->|
+                   ps
+
+   [d] is largely sufficent to represent all the days in Ptime's
+   [min;max] range on both 32-bit and 64-bit platforms. *)
+
+type t = int * int64
+
+let ps_count_in_s    =      1_000_000_000_000L
+let ps_count_in_min  =     60_000_000_000_000L
+let ps_count_in_hour =   3600_000_000_000_000L
+let ps_count_in_day  = 86_400_000_000_000_000L
+let ps_day_max       = 86_399_999_999_999_999L
+
+let neg = function
+| (s, 0L)  -> (-s, 0L)
+| (s, ps) -> (-(s + 1), Int64.sub ps_count_in_day ps)
+
+let add (d0, ps0) (d1, ps1) =
+  let d = d0 + d1 in
+  let ps = Int64.add ps0 ps1 in
+  let ps_clamp = Int64.rem ps ps_count_in_day in
+  let d = d + Int64.compare ps ps_clamp in
+  d, ps_clamp
+
+let sub t0 t1 = add t0 (neg t1)
+let span_abs (s, _ as t) = if s < 0 then neg t else t
+
+let equal t0 t1 = t0 = t1
+let compare (d0, ps0) (d1, ps1) =
+  let c = Pervasives.compare d0 d1 in
+  if c <> 0 then c else Pervasives.compare ps0 ps1
+
+let pp_raw ppf (d, ps) = Format.fprintf ppf "@[<1>(%d,@,%Ld)@]" d ps
+
+(* POSIX spans *)
+
+type span = t
+
+module Span = struct
+
+  type t = span
+
+  let max_int_f = float max_int
+  let of_s secs =
+    let d = abs_float secs in
+    let days = d /. 86_400. in
+    if days > max_int_f || days <> days (* nan *)
+    then invalid_arg (err_span_float d (max_int_f *. 86_400.))
+    else
+    let frac_s, rem_s = modf (mod_float d 86_400.) in
+    let rem_ps = Int64.(mul (of_float rem_s) ps_count_in_s) in
+    let frac_ps = Int64.(of_float (frac_s *. 1e12)) in
+    let span = truncate days, (Int64.add rem_ps frac_ps) in
+    if secs < 0. then neg span else span
+
+  let to_s (d, ps) =
+    let days_s = (float d) *. 86_400. in
+    let day_s = Int64.(to_float (div ps ps_count_in_s)) in
+    let day_rem_ps = Int64.(to_float (rem ps ps_count_in_s)) in
+    days_s +. day_s +. (day_rem_ps *. 1e-12)
+
+  let of_d_ps (d, ps) =
+    if 0L < ps && ps < ps_count_in_day then (d, ps) else
+    invalid_arg (err_span_d_ps d ps ps_count_in_day)
+
+  let to_d_ps d = d
+
+  let of_int_s d =
+    let s = abs d in
+    let s = (s / 86_400, Int64.(mul (of_int (s mod 86_400)) ps_count_in_s)) in
+    if d < 0 then neg s else s
+
+  let equal = equal
+  let compare = compare
+  let pp_raw = pp_raw
+  let round x = floor (x +. 0.5)
+end
+
+(* POSIX timestamps *)
+
+let epoch =
+  (0, 0L) (* 1970-01-01 00:00:00 UTC *)
+
+let min =
+  (jd_ptime_min - jd_posix_epoch, 0L) (* 0000-01-01 00:00:00 UTC *)
+
+let max =
+  (jd_ptime_max - jd_posix_epoch, ps_day_max) (* 9999-12-31 23:59:59 UTC *)
+
+let of_span span =
+  if compare span min = -1 || compare span max = 1 then None else
+  Some span
+
+let to_span t = t
 
 (* Predicates *)
 
-let equal t0 t1 = t0 = t1
-let compare t0 t1 = Pervasives.compare t0 t1
 let is_earlier t ~than = compare t than = -1
 let is_later t ~than = compare t than = 1
 
 (* POSIX arithmetic *)
 
-let add_posix_s t d = of_posix_ms (t +. d *. 1e3)
-let sub_posix_s t d = of_posix_ms (t -. d *. 1e3)
-let diff_posix_s t1 t0 = (t1 -. t0) *. 1e-3
+let add_span t d = of_span (add t d)
+let sub_span t d = of_span (sub t d)
+let diff t1 t0 = sub t1 t0
 
 (* Time zone offsets between local and UTC timelines *)
 
@@ -118,12 +216,10 @@ let of_date_time (date, ((hh, mm, ss), tz_offset_s as t)) =
   (* We first verify that the given date and time are Ptime-valid.
      Once this has been established we find find the number of Julian
      days since the epoch for the given proleptic Georgian calendar
-     date. Multiplying this number by 86_400_000 gives us the
-     millisecond precision POSIX timestamp for the first instant
-     (00:00:00 UTC) of the day corresponding to the date. We then add
-     the remaining time fields converted to milliseconds as needed and
-     compensate the time zone offset. This final result is checked to
-     be in the [min;max] range.
+     date. This gives us the POSIX day component of the timestamp. The
+     remaining time fields are used to derive the picosecond precision
+     time in that day componsated by the time zone offset. The final
+     result is checked to be in Ptime's [min;max] range.
 
      By definition POSIX timestamps cannot represent leap seconds.
      With the code below any date-time with a seconds value of 60
@@ -133,23 +229,15 @@ let of_date_time (date, ((hh, mm, ss), tz_offset_s as t)) =
      (leap second subtraction) is mapped on the POSIX timestamp that
      represents this non existing instant. *)
   if not (is_date_valid date && is_time_valid t) then None else
-  let days_since_epoch = jd_of_date date - jd_posix_epoch in
-  of_posix_ms @@ (float days_since_epoch) *. 86_400_000. +.
-                 (float hh) *. 3600_000. +.
-                 (float mm) *. 60_000. +.
-                 (float ss) *. 1000. -.
-                 (float tz_offset_s) *. 1000.
+  let d = jd_of_date date - jd_posix_epoch in
+  let hh_ps = Int64.(mul (of_int hh) ps_count_in_hour) in
+  let mm_ps = Int64.(mul (of_int mm) ps_count_in_min) in
+  let ss_ps = Int64.(mul (of_int ss) ps_count_in_s) in
+  let ps = Int64.(add hh_ps (add mm_ps ss_ps)) in
+  sub_span (d, ps) (Span.of_int_s tz_offset_s)
 
 let to_date_time ?(tz_offset_s = 0) t =
-  (* We first floor the timestamp. This allows the resulting date-time
-     for both positive and negative timestamps to show the second they
-     exists in and provide a well behaved time line. Graphically:
-
-        -2   -1    0    1    2
-     ... +----+----+----+----+ ...
-         [<---[<---[<---[<---[
-
-     To render the timestamp in the given time zone offset we first
+  (* To render the timestamp in the given time zone offset we first
      express the timestamp in local time and then compute the date
      fields on that stamp as if it were UTC. If the local timestamp is
      not in [min;max] then its date fields cannot be valid according
@@ -160,18 +248,11 @@ let to_date_time ?(tz_offset_s = 0) t =
      sense on a POSIX timestamp (i.e. UTC) but works equally well to
      render the date-time fields of a local timestamp.
 
-     We first find the timestamp's number of Julian days since
-     Ptime.min. In order not to have to deal with negative values on
-     which mod_float would not have the desired behaviour we first
-     bring the timestamp on a positive timescale by subtracting
-     Ptime.min's value. Given the [min;max] range this gives us a
-     magnitude that is still smaller than 2^53 (and hence precisely
-     represented). Dividing this magnitude by 86_400_000 gives us the
-     number of Julian days since Ptime.min which we can use to find
-     the actual Julian day and use to convert it to a proleptic
-     Gergorian calendar date. The remainder of this division is the
-     number of remaining POSIX milliseconds in that day which defines
-     the UTC daytime according to its various units.
+     We first take take the POSIX day count [d] (equivalent by
+     definition to an UTC day count) from the epoch, convert it to a
+     Julian Day and use this to get the proleptic Gregorian calendar
+     date. The POSIX picoseconds [ps] in the day are are converted to
+     a daytime according to to its various units.
 
      By definition no POSIX timestamp can represent a date-time with a
      seconds value of 60 (leap second addition) and thus the function
@@ -179,19 +260,17 @@ let to_date_time ?(tz_offset_s = 0) t =
      hand it will return an inexisting UTC date-time with a seconds
      value of 59 whenever a leap second is subtracted since there is a
      POSIX timestamp that represents this instant. *)
-  let t = floor t in
-  let t, tz_offset_s = match add_posix_s t (float tz_offset_s) with
-  | None -> t, 0
+  let (d, ps), tz_offset_s = match add_span t (Span.of_int_s tz_offset_s) with
+  | None -> t, 0 (* fallback to UTC *)
   | Some local -> local, tz_offset_s
   in
-  let t = t -. min  (* bring the timestamps on positive numbers *) in
-  let day_num = truncate (t /. 86_400_000.) in
-  let jd = jd_ptime_min + day_num in
+  let jd = d + jd_posix_epoch in
   let date = jd_to_date jd in
-  let daytime_s = truncate ((mod_float t 86_400_000.)) / 1000 in
-  let hh = (daytime_s / 3600) in
-  let mm = (daytime_s mod 3600) / 60 in
-  let ss = (daytime_s mod 60) in
+  let hh = Int64.(to_int (div ps ps_count_in_hour)) in
+  let hh_rem = Int64.rem ps ps_count_in_hour in
+  let mm = Int64.(to_int (div hh_rem ps_count_in_min)) in
+  let mm_rem = Int64.rem hh_rem ps_count_in_min in
+  let ss = Int64.(to_int (div mm_rem ps_count_in_s)) in
   date, ((hh, mm, ss), tz_offset_s)
 
 let of_date date = of_date_time (date, ((00, 00, 00), 0))
@@ -264,17 +343,19 @@ let decide_frac_or_tz ~strict pos max s =
       let chars = ['.'; '+'; '-'; 'Z'] @ if strict then [] else ['z'] in
       error_pos pos (`Exp_chars chars)
 
-let parse_frac_ms pos max s =
+let parse_frac_ps pos max s =
   if pos > max then error_pos max `Eoi else
   if not (is_digit s.[pos]) then error_exp_digit pos else
-  let rec loop k acc =
+  let rec loop k acc pow =
     if k > max then error_pos max `Eoi else
     if not (is_digit s.[k]) then (Some acc), k else
-    let count = k - pos in
-    loop (k + 1) (acc +. (float (Char.code s.[k] - 0x30)) *.
-                         10. ** (float (2 - count)))
+    let count = k - pos + 1 in
+    if count > 12 then (* truncate *) loop (k + 1) acc pow else
+    let pow = Int64.div pow 10L in
+    let acc = Int64.(add acc (mul (of_int (Char.code s.[k] - 0x30)) pow)) in
+    loop (k + 1) acc pow
   in
-  loop pos 0.
+  loop pos 0L ps_count_in_s
 
 let parse_tz_s ~strict pos max s =
   let parse_tz_mag sign pos =
@@ -323,7 +404,7 @@ let of_rfc3339 ?last ?(strict = false) ?(pos = 0) ?len s =
     parse_char ':' (ss_pos - 1) max s;
     let ss = parse_digits ~count:2 ss_pos max s in
     let frac, tz_pos = match decide_frac_or_tz ~strict decide_pos max s with
-    | `Frac -> parse_frac_ms (decide_pos + 1) max s
+    | `Frac -> parse_frac_ps (decide_pos + 1) max s
     | `Tz -> None, decide_pos
     in
     let tz_s, last_pos = parse_tz_s ~strict tz_pos max s in
@@ -331,9 +412,9 @@ let of_rfc3339 ?last ?(strict = false) ?(pos = 0) ?len s =
     | None -> error (pos, last_pos) `Invalid_stamp
     | Some t ->
         let r = match frac with
-        | None | Some 0. -> t, tz_s
-        | Some f ->
-            match of_posix_ms (t +. f) with
+        | None | Some 0L -> t, tz_s
+        | Some frac ->
+            match of_span (add t (0, frac)) with
             | None -> error (pos, last_pos) `Invalid_stamp
             | Some t -> t, tz_s
         in
@@ -361,34 +442,30 @@ let rfc3339_adjust_tz_offset tz_offset_s =
   then tz_offset_s
   else 0 (* UTC *)
 
-let s_frac_of_ms frac t =      (* [frac]ths fractional second digits of [t] *)
-  (* We take the absolute value of the timestamp modulo 1000 which
-     gives us the number milliseconds precision digits represented in
-     [t]. For positive numbers this is the number of subsecond
-     precision milliseconds in the timestamp. For negative numbers
-     this is the remaining number of subsecond precision milliseconds
-     until the next timestamp (see the timeline image in
-     [to_date_time]'s comment) and hence we subtract that from 1000 to
-     get the number milliseconds in the timestamp (e.g. the timestamp
-     -200 represents the 800's millisecond of the second before the
-     epoch). We then multiply the result by the power of 10 that
-     brings the precision on the integral part of a floating point
-     value and truncate the result. The [0;9] frac range ensures that
-     the resulting integer doesn't overflow on 32-bit platforms. *)
-  if frac < 0 || frac > 9 then invalid_arg (err_frac_range 0 9 frac) else
-  let fpart = mod_float (abs_float t) 1000. in
-  if fpart = 0. then 0 else
-  let fpart = if t < 0. then 1000. -. fpart else fpart in
-  let mul = 10. ** (float (frac - 3)) in
-  truncate (fpart *. mul)
+let frac_div = [| 100_000_000_000L;
+                   10_000_000_000L;
+                    1_000_000_000L;
+                      100_000_000L;
+                       10_000_000L;
+                        1_000_000L;
+                          100_000L;
+                           10_000L;
+                            1_000L;
+                              100L;
+                               10L;
+                                1L; |]
 
-let to_rfc3339 ?(space = false) ?(frac = 0) ?(tz_offset_s = 0) t =
+let s_frac_of_ps frac ps =
+  if frac < 0 || frac > 12 then invalid_arg (err_frac_range 0 12 frac) else
+  Int64.(div (rem ps ps_count_in_s) frac_div.(frac - 1))
+
+let to_rfc3339 ?(space = false) ?(frac = 0) ?(tz_offset_s = 0) (_, ps as t) =
   let buf = Buffer.create 255 in
   let tz_offset_s = rfc3339_adjust_tz_offset tz_offset_s in
   let (y, m, d), ((hh, ss, mm), tz_offset_s) = to_date_time ~tz_offset_s t in
   let dt_sep = if space then ' ' else 'T' in
   Printf.bprintf buf "%04d-%02d-%02d%c%02d:%02d:%02d" y m d dt_sep hh ss mm;
-  if frac <> 0 then Printf.bprintf buf ".%0*d" frac (s_frac_of_ms frac t);
+  if frac <> 0 then Printf.bprintf buf ".%0*Ld" frac (s_frac_of_ps frac ps);
   if tz_offset_s = 0 then Printf.bprintf buf "Z" else
   begin
     let tz_sign = if tz_offset_s < 0 then '-' else '+' in
@@ -404,11 +481,11 @@ let pp_rfc3339 ?space ?frac ?tz_offset_s () ppf t =
 
 (* Pretty printing *)
 
-let pp ?(frac = 0) ?(tz_offset_s = 0) () ppf t =
+let pp ?(frac = 0) ?(tz_offset_s = 0) () ppf (_, ps as t) =
   let tz_offset_s = rfc3339_adjust_tz_offset tz_offset_s in
   let (y, m, d), ((hh, ss, mm), tz_offset_s) = to_date_time ~tz_offset_s t in
   Format.fprintf ppf "%04d-%02d-%02d %02d:%02d:%02d" y m d hh ss mm;
-  if frac <> 0 then Format.fprintf ppf ".%0*d" frac (s_frac_of_ms frac t);
+  if frac <> 0 then Format.fprintf ppf ".%0*Ld" frac (s_frac_of_ps frac ps);
   let tz_sign = if tz_offset_s < 0 then '-' else '+' in
   let tz_min = abs (tz_offset_s / 60) in
   let tz_hh = tz_min / 60 in

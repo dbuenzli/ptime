@@ -11,7 +11,7 @@ let unit ppf () = Format.fprintf ppf "()"
 (* Timestamps *)
 
 let float ppf f = Format.fprintf ppf "%.10f" f
-let raw_stamp ppf t = float ppf (Ptime.to_posix_s t)
+let raw_stamp = Ptime.pp_raw
 
 let eq_stamp = eq ~eq:Ptime.equal ~pp:raw_stamp
 let eq_stamp_opt = eq_option ~eq:Ptime.equal ~pp:raw_stamp

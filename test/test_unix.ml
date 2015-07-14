@@ -9,10 +9,11 @@ open Testing_ptime
 
 let rand_stamp = Test_rand.(if Sys.word_size = 32 then stamp_32bits else stamp)
 let value_of_posix_s =
-  Ptime.of_posix_s $ pp_float @-> (ret_get_option raw_stamp)
+  let of_posix_s s = Ptime.(of_span (Span.of_s s)) in
+  of_posix_s $ pp_float @-> (ret_get_option raw_stamp)
 
 let unix_to_date_time t =
-  let t = Ptime.to_posix_s t in
+  let t = Ptime.(Span.to_s (to_span t)) in
   let t = floor t (* see http://caml.inria.fr/mantis/view.php?id=6921 *) in
   let tm = Unix.gmtime t in
   let d = (tm.Unix.tm_year + 1900), (tm.Unix.tm_mon + 1), (tm.Unix.tm_mday) in
@@ -38,7 +39,7 @@ let stamp_to_date_time =
 
 let exhaustive_min_max =
   if Sys.word_size > 32
-  then Ptime.(to_posix_s min), Ptime.(to_posix_s max)
+  then Ptime.(Span.to_s (to_span min)), Ptime.(Span.to_s (to_span max))
   else Int32.(to_float min_int), Int32.(to_float max_int)
 
 let exhaustive =

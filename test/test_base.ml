@@ -7,26 +7,19 @@
 open Testing
 open Testing_ptime
 
-let assumptions =
-  test "Assumptions" @@ fun () ->
-  let max_int_arith = 2. ** 53. in
-  let max_internal = Ptime.(to_posix_s max -. to_posix_s min) *. 1e3 in
-  eq_bool (max_internal < max_int_arith) true;
-  ()
-
 let base =
   test "Constants and base constructors" @@ fun () ->
-  eq_float Ptime.(to_posix_s epoch) 0.;
-  eq_float Ptime.(to_posix_s min) ~-.62167219200.;
-  eq_float Ptime.(to_posix_s max) 253402300799.;
-  eq_stamp_opt (Ptime.of_posix_s 0.) (Some Ptime.epoch);
-  eq_stamp_opt (Ptime.of_posix_s ~-.62167219200.) (Some Ptime.min);
-  eq_stamp_opt (Ptime.of_posix_s 253402300799.) (Some Ptime.max);
-  eq_stamp_opt (Ptime.of_posix_s (~-.62167219200. -. 0.1)) None;
-  eq_stamp_opt (Ptime.of_posix_s (253402300799. +. 0.1)) None;
-  eq_stamp_opt (Ptime.of_posix_s nan) None;
-  eq_stamp_opt (Ptime.of_posix_s infinity) None;
-  eq_stamp_opt (Ptime.of_posix_s ~-.infinity) None;
+  eq_float Ptime.(Span.to_s (to_span epoch)) 0.;
+  eq_float Ptime.(Span.to_s (to_span min)) ~-.62167219200.;
+  eq_float Ptime.(Span.to_s (to_span max)) 253402300799.;
+  eq_stamp_opt Ptime.(of_span (Span.of_s 0.)) (Some Ptime.epoch);
+  eq_stamp_opt Ptime.(of_span (Span.of_s ~-.62167219200.)) (Some Ptime.min);
+  eq_stamp_opt Ptime.(of_span (Span.of_s 253402300799.)) (Some Ptime.max);
+  eq_stamp_opt Ptime.(of_span (Span.of_s (~-.62167219200. -. 0.1))) None;
+  eq_stamp_opt Ptime.(of_span (Span.of_s (253402300799. +. 0.1))) None;
+(* TODO  eq_stamp_opt Ptime.(of_span (Span.of_s nan)) None; *)
+(* TODO  eq_stamp_opt Ptime.(of_span (Span.of_s infinity)) None; *)
+(* TODO  eq_stamp_opt Ptime.(of_span (Span.of_s ~-.infinity)) None; *)
   ()
 
 let predicates =
@@ -53,35 +46,37 @@ let predicates =
 
 let posix_arithmetic =
   test "POSIX arithmetic" @@ fun () ->
+  let span = Ptime.Span.of_s in
   (* Test limits *)
-  eq_stamp_opt Ptime.(add_posix_s max 0.1) None;
-  eq_stamp_opt Ptime.(add_posix_s min ~-.0.1) None;
-  eq_stamp_opt Ptime.(sub_posix_s min 0.1) None;
-  eq_stamp_opt Ptime.(sub_posix_s max ~-.0.1) None;
-  (* Test garbage *)
-  eq_stamp_opt Ptime.(add_posix_s epoch nan) None;
-  eq_stamp_opt Ptime.(add_posix_s epoch infinity) None;
-  eq_stamp_opt Ptime.(add_posix_s epoch ~-.infinity) None;
-  eq_stamp_opt Ptime.(add_posix_s epoch max_float) None;
-  eq_stamp_opt Ptime.(add_posix_s epoch ~-.max_float) None;
+  eq_stamp_opt Ptime.(add_span max (span 0.1)) None;
+  eq_stamp_opt Ptime.(add_span min (span ~-.0.1)) None;
+  eq_stamp_opt Ptime.(sub_span min (span 0.1)) None;
+  eq_stamp_opt Ptime.(sub_span max (span ~-.0.1)) None;
+  (* Test garbage TODO *)
+(*   eq_stamp_opt Ptime.(add_span epoch (span nan)) None;
+  eq_stamp_opt Ptime.(add_span epoch (span infinity)) None;
+  eq_stamp_opt Ptime.(add_span epoch (span ~-.infinity)) None;
+  eq_stamp_opt Ptime.(add_span epoch (span max_float)) None;
+  eq_stamp_opt Ptime.(add_span epoch (span ~-.max_float)) None;
+*)
   (* Test arithmetic *)
-  eq_stamp_opt (Ptime.of_posix_s 10.) Ptime.(add_posix_s epoch 10.);
-  eq_stamp_opt (Ptime.of_posix_s ~-.10.) Ptime.(sub_posix_s epoch 10.);
-  eq_stamp_opt (Ptime.of_posix_s ~-.10.) Ptime.(sub_posix_s epoch 10.);
+  eq_stamp_opt (Ptime.of_span (span 10.)) Ptime.(add_span epoch (span 10.));
+  eq_stamp_opt (Ptime.of_span (span ~-.10.)) Ptime.(sub_span epoch (span 10.));
+  eq_stamp_opt (Ptime.of_span (span ~-.10.)) Ptime.(sub_span epoch (span 10.));
   block @@ begin fun () ->
-    let get = Ptime.of_posix_s $ float @-> ret_get_option raw_stamp in
+    let of_span s = Ptime.(of_span (Span.of_s s)) in
+    let get = of_span $ float @-> ret_get_option raw_stamp in
     let t0 = get 20. in
     let t1 = get 10. in
     let t2 = get ~-.10. in
-    eq_float Ptime.(diff_posix_s t0 t1) 10.;
-    eq_float Ptime.(diff_posix_s t1 t0) ~-.10.;
-    eq_float Ptime.(diff_posix_s t2 t0) ~-.30.;
-    eq_float Ptime.(diff_posix_s t0 t2) 30.;
+    eq_float Ptime.(Span.to_s (diff t0 t1)) 10.;
+    eq_float Ptime.(Span.to_s (diff t1 t0)) ~-.10.;
+    eq_float Ptime.(Span.to_s (diff t2 t0)) ~-.30.;
+    eq_float Ptime.(Span.to_s (diff t0 t2)) 30.;
   end
 
 let suite =
   suite "Ptime base tests" @@ fun () ->
-  assumptions ();
   base ();
   posix_arithmetic ();
   predicates ();

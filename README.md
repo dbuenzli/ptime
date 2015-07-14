@@ -3,10 +3,10 @@ Ptime — POSIX time for OCaml
 Release %%VERSION%%
 
 Ptime has platform independent POSIX time support in pure OCaml. It
-provides a type to represent a well-defined range of POSIX timestamps,
-conversion with date-time values, conversion with
-[RFC 3339 timestamps][1] and pretty printing to a human-readable,
-locale-independent representation.
+provides a type to represent a well-defined range of POSIX timestamps
+with picosecond precision, conversion with date-time values,
+conversion with [RFC 3339 timestamps][1] and pretty printing to a
+human-readable, locale-independent representation.
 
 Ptime is not a calendar library.
 

@@ -6,14 +6,14 @@
 
 (** POSIX time.
 
-    [Ptime] has platform independent support for POSIX time. It
+    {!Ptime} has platform independent support for POSIX time. It
     provides a {{!t}type} to represent a well-defined range of POSIX
-    timestamps, conversion with {{!date_time}date-time values},
-    conversion with {{!rfc3339}RFC 3339 timestamps} and
-    {{!print}pretty printing} to a human-readable, locale-independent
-    representation.
+    timestamps with picosecond precision, conversion with
+    {{!date_time}date-time values}, conversion with {{!rfc3339}RFC
+    3339 timestamps} and {{!print}pretty printing} to a
+    human-readable, locale-independent representation.
 
-    [Ptime] is not a calendar library.
+    {!Ptime} is not a calendar library.
 
     Consult the {{!basics}basics} and a few {{!notes}notes
     and limitations}.
@@ -27,37 +27,135 @@
 
     {e Release %%VERSION%% - %%MAINTAINER%% } *)
 
-(** {1:timestamps POSIX timestamps} *)
-
 open Rresult
 
+(** {1:timespans POSIX spans} *)
+
+type span
+(** The type for signed picosecond precision POSIX spans. A value
+    of this type represent the duration between two POSIX timestamps. *)
+
+(** POSIX spans.
+
+    {b FIXME.} With this new interface the limits are a bit less clear
+    than they used to be. I think the [Invalid_arguments] should be
+    replaced by options (at least for [of_s]), but this becomes
+    painful with {!of_span}, should we inline the option monad there ?
+    Also should we limit the range of {!span} to the span {!Ptime.max} -
+    {!Ptime.min} ?
+
+    {b WARNING.} A POSIX time span is not equal to an SI-based time
+    span see the {{!basics}basics}. *)
+module Span : sig
+
+  (** {1:spans POSIX durations} *)
+
+  type t = span
+  (** The type for for signed, picosecond precision, POSIX spans. *)
+
+  val of_s : float -> span
+  (** [of_s secs] is a span for the signed POSIX second duration [secs].
+      [secs]'s precision is considered up to the picosecond, i.e. [1e-12].
+
+      @raise Invalid_argument if the integral part of [abs_float secs]
+      is not in the range \[0; {!max_int} *. 86_400.\]. *)
+
+  val to_s : span -> float
+  (** [to_s d] is the span [d] as POSIX seconds.
+
+      {b FIXME.} This may not be read back by [of_s], should
+      we rather limit [span] ? *)
+
+  val of_d_ps : int * int64 -> span
+  (** [of_d_ps (d, ps)] is a span for the signed POSIX picosecond
+      duration [d] * 86_400e12 + [ps]. [d] is a signed number of POSIX
+      days and [ps] a number of picoseconds in the range
+      \[[0];[86_399_999_999_999_999L]\].
+
+      @raise Invalid_argument if [ns] is not in the right range. *)
+
+  val to_d_ps : span -> int * int64
+  (** [to_d_ps d] is the span [d] as a pair [(d, ps)] expressing the
+      POSIX picosecond duration [d] * 86_400e12 + [ps] with
+      [ps] in the range \[[0];[86_399_999_999_999_999L]\] *)
+
+(*
+  (** {1:arith Arithmetic}
+
+      {b Warning.} The following functions rollover on overflows. *)
+
+  val neg : span -> span
+  (** [neg d] is the span [d] negated. *)
+
+  val add : span -> span -> span
+  (** [add d d'] is [d] + [d']. *)
+
+  val sub : span -> span -> span
+  (** [sub d d'] is [d] - [d']. *)
+
+  val abs : span -> span
+  (** [abs d] is the absolute value of span [d]. *)
+*)
+
+  (** {1:predicates Predicates} *)
+
+  val equal : t -> t -> bool
+  (** [equal d d'] is [true] iff [d] and [d'] are the same durations. *)
+
+  val compare : t -> t -> int
+  (** [compare d d'] is a total order on durations that is compatible
+      with signed duration order. *)
+
+  (** {1:print Pretty printing} *)
+
+  val pp_raw : Format.formatter -> span -> unit
+  (** [pp_raw ppf s] prints an unspecified raw representation of [d]
+      on [ppf]. *)
+
+(*
+  val pp : Format.formatter -> span -> unit
+  (** [pp_span ppf d] prints an unspecified representation of [d] on
+      [ppf].  The representation is not fixed-width, depends on the
+      magnitude of [d] and uses locale independent
+      {{:http://www.bipm.org/en/publications/si-brochure/chapter3.html}SI
+      prefixes} on seconds and
+      {{:http://www.bipm.org/en/publications/si-brochure/table6.html}accepted
+      non-SI units}. Years are counted in Julian years (365.25
+      SI-accepted days) as
+      {{:http://www.iau.org/publications/proceedings_rules/units/}defined}
+      by the International Astronomical Union (IUA). *)
+*)
+end
+
+(** {1:timestamps POSIX timestamps} *)
+
 type t
-(** The type for {{!posix_time}POSIX timestamps} in the range
-    \[{!min};{!max}\]. Note that POSIX timestamps are
-    by definition always on the UTC timeline. *)
+(** The type for picosecond precision POSIX timestamps in the range
+    \[{!min};{!max}\]. Note that POSIX timestamps are by definition
+    always on the UTC timeline. *)
 
 val epoch : t
 (** [epoch] is 1970-01-01 00:00:00 UTC. *)
 
 val min : t
 (** [min] is 0000-01-01 00:00:00 UTC, the earliest timestamp
-    representable by [Ptime]. *)
+    representable by {!Ptime}. *)
 
 val max : t
 (** [max] is 9999-12-31 23:59:59 UTC, the latest timestamp
-    representable by [Ptime]. *)
+    representable by {!Ptime}. *)
 
-val of_posix_s : float -> t option
-(** [of_posix_s d] is the POSIX timestamp that:
+val of_span : span -> t option
+(** [of_span d] is the POSIX time stamp that:
     {ul
-    {- Happens [d] POSIX seconds {e after} {!epoch} if [d] is positive.}
-    {- Happens [d] POSIX seconds {e before} {!epoch} if [d] is negative.}}
+    {- Happens at the duration [d] {e after} {!epoch} if [d] is positive.}
+    {- Happens at the duration [d] {e before} {!epoch} if [d] is negative.}}
     [None] is returned if the timestamp is not in the range
     \[{!min};{!max}\]. *)
 
-val to_posix_s : t -> float
-(** [to_posix_s t] is the signed number of POSIX seconds that happen
-    between [t] and {!epoch}:
+val to_span : t -> span
+(** [to_span t] is the signed POSIX duration that happen between [t]
+    and {!epoch}:
     {ul
     {- If the number is positive [t] happens {e after} {!epoch}.}
     {- If the number is negative [t] happens {e before} {!epoch}.}} *)
@@ -79,23 +177,24 @@ val is_later : t -> than:t -> bool
 
 (** {1:posix_arithmetic POSIX arithmetic}
 
-    {b WARNING.} A POSIX second is not equal to an SI second, see
-    the {{!basics}basics}. Do not use these functions to perform
-    calendar arithmetic or measure wall-clock durations, you will fail. *)
+    {b WARNING.} A POSIX span is not equal to an SI-based time span,
+    see the {{!basics}basics}. Do not use these functions to perform
+    calendar arithmetic or measure wall-clock durations, you will
+    fail. *)
 
-val add_posix_s : t -> float -> t option
-(** [add_posix_s t d] is timestamp [t + d], that is [t] with [d]
-    signed POSIX seconds added. [None] is returned if the result is
-    not in the range \[{!min};{!max}\]. *)
+val add_span : t -> span -> t option
+(** [add_span t d] is timestamp [t + d], that is [t] with the signed
+    POSIX span [d] added. [None] is returned if the result is not
+    in the range \[{!min};{!max}\]. *)
 
-val sub_posix_s : t -> float -> t option
-(** [sub_posix_s t d] is the timestamp [t - d], that is [t] with [d]
-    signed POSIX seconds subtracted. [None] is returned if the result
-    is not in the range \[{!min};{!max}\]. *)
+val sub_span : t -> span -> t option
+(** [sub_span t d] is the timestamp [t - d], that is [t] with the
+    POSIX span [d] subtracted. [None] is returned if the result is not
+    in the range \[{!min};{!max}\]. *)
 
-val diff_posix_s : t -> t -> float
-(** [diff_posix_s t t'] is the signed number of POSIX seconds [t - t'] that
-    happens between the timestamps [t] and [t']. *)
+val diff : t -> t -> span
+(** [diff t t'] is the signed POSIX span [t - t'] that happens between
+    the timestamps [t] and [t']. *)
 
 (** {1:tz_offset Time zone offsets between local and UTC timelines} *)
 
@@ -178,7 +277,8 @@ val to_date_time : ?tz_offset_s:int -> t -> date * time
     assume it will be the one you gave to the function. Note that for
     real-world time zone offsets the fallback to [0] will only happen
     around {!Ptime.min} and {!Ptime.max}.  Formally the fallback
-    occurs whenever {!add_posix_s} [t tz_offset_s] is [None].
+    occurs whenever {!add_span} [t d] is [None] where [d] is
+    [tz_offset_s] as a span value.
 
     {b Leap seconds.} No POSIX timestamp can represent a date-time
     with a leap second added, hence this function will never return a
@@ -240,15 +340,21 @@ val of_rfc3339 : ?last:int ref -> ?strict:bool -> ?pos:int -> ?len:int ->
     timestamps with lowercase ['T'] or ['Z'] characters or space
     separated date and times.
 
-    {b Limitations.} RFC 3339 allows a few degenerate timestamps with
-    non-zero time zone offsets to be parsed at the boundaries that
-    correspond to timestamps that cannot be expressed in UTC in RFC
-    3339 itself (e.g. [0000-01-01T00:00:00+00:01]), the function
-    errors on these timestamps with [`Invalid_stamp]. Leap seconds are
-    allowed on any date-time and handled as in {!of_date_time}.
-
     @raise Invalid_argument if [pos] and [len] do not designate
-    a {{!String}valid substring} of [s]. *)
+    a {{!String}valid substring} of [s].
+
+    {b Notes and limitations.}
+    {ul
+    {- RFC 3339 allows a few degenerate (I say) timestamps with
+       non-zero time zone offsets to be parsed at the boundaries that
+       correspond to timestamps that cannot be expressed in UTC in RFC
+       3339 itself (e.g. [0000-01-01T00:00:00+00:01]). The function
+       errors on these timestamps with [`Invalid_stamp] as they cannot
+       be represented on in the range \[{!min};{!max}\].}
+    {- Leap seconds are allowed on any date-time and handled as in
+       {!of_date_time}}
+    {- Fractional part of a timestamp is truncated beyond the
+       picosecond (1e-12).}} *)
 
 val to_rfc3339 : ?space:bool -> ?frac:int -> ?tz_offset_s:tz_offset_s ->
   t -> string
@@ -257,19 +363,20 @@ val to_rfc3339 : ?space:bool -> ?frac:int -> ?tz_offset_s:tz_offset_s ->
     {{:https://tools.ietf.org/html/rfc3339#section-5.6}[date-time]}
     production with:
     {ul
-    {- [tz_offset_s] hints the timezone offset to use (defaults to [0], i.e.
-       UTC). The hint is ignored and [0] is used in the following cases:
-       if [tz_offset_s] is not an integral number of minutes and its magnitude
-       not in the range permitted by the standard, if
-       {!add_posix_s} [t tz_offset_s] is [None] (the resulting timestamp
-       rendering would not be RFC 3339 compliant).}
-    {- [frac] in the the range \[[0];[9]\] specifies that exactly
+    {- [tz_offset_s] hints the timezone offset to use (defaults to
+       [0], i.e.  UTC). The hint is ignored and [0] is used in the
+       following cases: if [tz_offset_s] is not an integral number of
+       minutes and its magnitude not in the range permitted by the
+       standard, if {!add_span} [t d] is [None] where [d] is
+       tz_offset_s as a span value (the resulting timestamp rendering
+       would not be RFC 3339 compliant).}
+    {- [frac] in the range \[[0];[12]\] specifies that exactly
        [frac]th decimal digits of the fractional second of [t] are
        rendered (defaults to [0]).}
     {- [space] if [true] the date and time separator is a space
        rather than a ['T'] (not recommended, defaults to [false]).}}
 
-    @raise Invalid_argument if [frac] is not in the range \[[0];[9]\] *)
+    @raise Invalid_argument if [frac] is not in the range \[[0];[12]\] *)
 
 val pp_rfc3339 : ?space:bool -> ?frac:int -> ?tz_offset_s:tz_offset_s ->
   unit -> Format.formatter -> t -> unit
@@ -278,25 +385,30 @@ val pp_rfc3339 : ?space:bool -> ?frac:int -> ?tz_offset_s:tz_offset_s ->
 
 (** {1:print Pretty printing} *)
 
+val pp_raw : Format.formatter -> t -> unit
+(** [pp_raw ppf t] prints an unspecified raw representation of [t]
+     on [ppf]. *)
+
 val pp : ?frac:int -> ?tz_offset_s:tz_offset_s -> unit -> Format.formatter ->
   t -> unit
 (** [pp ~frac ~tz_offset_s () ppf t] prints an unspecified, human readable,
     locale-independent, representation of [t] with:
     {ul
-    {- [tz_offset_s] hints the timezone offset to use (defaults to [0], i.e.
-       UTC). The hint is ignored and [0] is used in the following cases:
-       if [tz_offset_s] is not an integral number of minutes and its magnitude
-       not in the range permitted by the standard, if
-       {!add_posix_s} [t tz_offset_s] is [None]}
-    {- [frac] in the the range \[[0];[9]\] specifies that exactly
+    {- [tz_offset_s] hints the timezone offset to use (defaults to
+       [0], i.e.  UTC). The hint is ignored and [0] is used in the
+       following cases: if [tz_offset_s] is not an integral number of
+       minutes and its magnitude not in the range permitted by the
+       standard, if {!add_span} [t d] is [None] where [d] is
+       tz_offset_s as a span value.}
+    {- [frac] in the the range \[[0];[12]\] specifies that exactly
        [frac]th decimal digits of the fractional second of [t] are
        rendered (defaults to [0]).}}
 
+    @raise Invalid_argument if [frac] is not in the range \[[0];[12]\].
+
     {b Note.} The output of this function is similar to but {b not}
     compliant with RFC 3339, it should only be used for presentation,
-    not as a serialization format.
-
-    @raise Invalid_argument if [frac] is not in the range \[[0];[9]\] *)
+    not as a serialization format. *)
 
 (**/**)
 val pp_top : Format.formatter -> t -> unit
@@ -313,34 +425,35 @@ val pp_top : Format.formatter -> t -> unit
     second is added a POSIX second lasts two SI seconds and whenever a
     leap second is subtracted a POSIX second lasts zero SI second.
 
-    [Ptime] does not provide any mean to convert the duration between
+    {!Ptime} does not provide any mean to convert the duration between
     two POSIX timestamps to SI seconds. The reason is that in order to
     accurately find this number, a
     {{:http://www.ietf.org/timezones/data/leap-seconds.list}leap
     second table} is needed. However since this table may change every
-    six months, [Ptime] decides not to include it so as not to
+    six months, {!Ptime} decides not to include it so as not to
     potentially become incorrect every six months.
 
     This decision has the following implications. First it should be
-    realised that the durations mentioned by the {!add_posix_s},
-    {!sub_posix_s} and {!diff_posix_s} functions are expressed in {e
+    realised that the durations mentioned by the {!add_span},
+    {!sub_span} and {!diff_span} functions are expressed in {e
     POSIX seconds} which may represent zero, one, or two SI
     seconds. For example if we add 1 second with
-    {!add_posix_s} to the POSIX timestamp for 1998-12-31 23:59:59 UTC,
+    {!add_span} to the POSIX timestamp for 1998-12-31 23:59:59 UTC,
     what we get is the timestamp for 1999-01-01 00:00:00 UTC:
 {[
 let get = function None -> assert false | Some v -> v
-let utc d t = get @@ Ptime.of_date_time (d, (t, 0 (* UTC *)))
+let utc d t = get @@ Ptime.of_date_time (d, (t, 0))
 let t0 = utc (1998, 12, 31) (23, 59, 59)
 let t1 = utc (1999, 01, 01) (00, 00, 00)
-let () = assert (Ptime.equal (some @@ Ptime.add_posix_s t0 1.) t1)
+let one_s = Ptime.Span.of_s 1.
+let () = assert (Ptime.equal (get @@ Ptime.add_span t0 one_s) t1)
 ]}
     However since the leap second 1998-12-31 23:59:60 UTC exists,
     {e two} actual SI seconds elapsed between [t0] and [t1]. Now if we use
-    {!diff_posix_s} to find the POSIX duration that elapsed between
+    {!diff_span} to find the POSIX duration that elapsed between
     [t0] and [t1] we get one POSIX second:
 {[
-let () = assert ((Ptime.diff_posix_s t1 t0) = 1.)
+let () = assert (Ptime.Span.equal (Ptime.diff t1 t0) one_s)
 ]}
     But still, two SI seconds elapsed between these two points in
     time. Note also that no value of type {!t} can represent the UTC
@@ -367,7 +480,8 @@ let () = assert (Ptime.equal t1 t2)
 let y = 9999 (* hypothetical year were this happens *)
 let t0 = utc (y, 06, 30) (23, 59, 58)
 let t1 = utc (y, 07, 01) (00, 00, 00)
-let () = assert (Ptime.diff_posix_s t1 t0 = 2.)
+let two_s = Ptime.Span.of_s 2.
+let () = assert (Ptime.Span.equal (Ptime.diff t1 t0) two_s)
 ]}
     We get two POSIX seconds, but only one SI second
     elapsed between these two points in time. It should also
@@ -378,27 +492,25 @@ let () = assert (Ptime.diff_posix_s t1 t0 = 2.)
     it never existed:
 {[
 let t2 = utc (y, 06, 30) (23, 59, 59)
-let () = assert (Ptime.equal (get @@ Ptime.add_posix_s t0 1.) t2)
+let () = assert (Ptime.equal (get @@ Ptime.add_span t0 two_s) t2)
 ]}
 
     {1:notes Notes and limitations}
 
     The following points should be taken into account
     {ul
-    {- [Ptime] is not a calendar library and will never be.}
-    {- [Ptime] can only represent timestamps in the range
-       \[{!Ptime.min};{!Ptime.max}\]. It is however able to convert {e any}
-       of these timestamps to a valid date-time or RFC 3339 timestamp.}
-    {- The values taken by {!of_posix_s} and returned by {!to_posix_s}
-       are compatible with the representation returned by
-       {!Unix.gettimeofday}.}
+    {- {!Ptime} is not a calendar library and will never be.}
+    {- {!Ptime} can only represent picosecond precision timestamps in
+       the range \[{!Ptime.min};{!Ptime.max}\]. It is however able to
+       convert {e any} of these timestamps to a valid date-time or RFC
+       3339 timestamp.}
     {- POSIX time in general is ill-suited to measure wall-clock
        time spans for the following reasons.
        {ul
        {- POSIX time counts time in POSIX seconds. POSIX
           seconds can represent 2, 1 or 0 SI seconds. [Ptime]
-          offers no mechanism to determine the duration of a POSIX second,
-          see the {{!basics}basics}.}
+          offers no mechanism to determine the SI duration between
+          two timestamps, see the {{!basics}basics}.}
        {- The POSIX timestamps returned by your platform are not
           monotonic: they are subject to operating system time
           adjustements and can even go back in time.  If you need to

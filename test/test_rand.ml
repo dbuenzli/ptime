@@ -23,14 +23,14 @@ let rec get_state () = match !rstate with
     set_seed (Random.State.bits s);
     get_state ()
 
-(* Random Ptime-valid stamps *)
+(* Random Ptime-valid stamps from floats *)
 
 let stamp_range min max =
   let bound = max -. min in
   fun () ->
     let r = Random.State.float (get_state ()) bound (* inclusive *) in
     let stamp = min +. r in
-    match Ptime.(of_posix_s stamp) with
+    match Ptime.(of_span (Span.of_s stamp)) with
     | None -> failwith (strf "cannot convert valid random stamp %f" stamp)
     | Some t -> t
 
@@ -40,8 +40,8 @@ let stamp_32bits =
   stamp_range min_stamp max_stamp
 
 let stamp : unit -> Ptime.t =
-  let min_stamp = Ptime.(to_posix_s min) in
-  let max_stamp = Ptime.(to_posix_s max) in
+  let min_stamp = Ptime.(Span.to_s (to_span min)) in
+  let max_stamp = Ptime.(Span.to_s (to_span max)) in
   stamp_range min_stamp max_stamp
 
 (* Random Ptime-valid dates *)

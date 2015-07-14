@@ -73,8 +73,10 @@ let tz =
 let subsecond =
   test "Subsecond stamp to date-time floors seconds" @@ fun () ->
   let add, sub =
-    Ptime.add_posix_s $ raw_stamp @-> pp_float @-> ret_get_option raw_stamp,
-    Ptime.sub_posix_s $ raw_stamp @-> pp_float @-> ret_get_option raw_stamp
+    let add t s = Ptime.(add_span t (Span.of_s s)) in
+    let sub t s = Ptime.(sub_span t (Span.of_s s)) in
+    add $ raw_stamp @-> pp_float @-> ret_get_option raw_stamp,
+    sub $ raw_stamp @-> pp_float @-> ret_get_option raw_stamp
   in
   let b0 = sub Ptime.epoch 0.75 in
   let b1 = sub Ptime.epoch 0.5 in
@@ -99,21 +101,22 @@ let leap_sec =
   let t1 = stamp_of_date_time ((1998, 12, 31), ((23, 59, 60), 0)) in
   let t2 = stamp_of_date_time after_leap_sec in
   eq_stamp t1 t2; (* leap sec is represented by second that comes after *)
-  eq_stamp_opt (Some t1) (Ptime.add_posix_s t0 1.);
+  eq_stamp_opt (Some t1) Ptime.(add_span t0 (Span.of_s 1.));
   eq_date_time after_leap_sec (Ptime.to_date_time t1);
   eq_date_time after_leap_sec (Ptime.to_date_time t2);
-  eq_float (Ptime.diff_posix_s t2 t0) 1.;
-  eq_float (Ptime.diff_posix_s t1 t0) 1.;
-  eq_float (Ptime.diff_posix_s t2 t1) 0.;
+  eq_float Ptime.(Span.to_s (diff t2 t0)) 1.;
+  eq_float Ptime.(Span.to_s (diff t1 t0)) 1.;
+  eq_float Ptime.(Span.to_s (diff t2 t1)) 0.;
   ()
 
 let stamp_trips =
   test "Random stamps to date-time round trips" @@ fun () ->
   let stamp_of_posix_s =
-    Ptime.of_posix_s $ pp_float @-> (ret_get_option raw_stamp)
+    let of_posix_s s = Ptime.(of_span (Span.of_s s)) in
+    of_posix_s $ pp_float @-> (ret_get_option raw_stamp)
   in
   let trip ?tz_offset_s t =
-    let back = stamp_of_posix_s (floor (Ptime.to_posix_s t)) in
+    let back = stamp_of_posix_s (floor (Ptime.(Span.to_s (to_span t)))) in
     let trip = stamp_of_date_time (Ptime.to_date_time ?tz_offset_s t) in
     eq_stamp back trip
   in
@@ -143,7 +146,8 @@ let round_trips =
         end
   in
   let add_posix_s =
-    Ptime.add_posix_s $ raw_stamp @-> pp_float @-> ret_get_option raw_stamp
+    let add_posix_s t s = Ptime.(add_span t (Span.of_s s)) in
+    add_posix_s $ raw_stamp @-> pp_float @-> ret_get_option raw_stamp
   in
   for i = 1 to Test_rand.loop_len () do
     let (_, (_, tz_offset_s) as dt) = rand_date_time_stamp () in
