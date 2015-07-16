@@ -10,9 +10,6 @@ open Rresult
 
 let strf = Format.asprintf
 
-let err_span_float d max =
-  strf "integral part of (abs_float %g) not in range [0;%g]" d max
-
 let err_span_d_ps d ps ps_max =
   strf "picosecond count of (%d,%Ld) not in range [0;%Ld]" d ps ps_max
 
@@ -58,7 +55,7 @@ let jd_posix_epoch = 2_440_588          (* the Julian day of the POSIX epoch *)
 let jd_ptime_min = 1_721_060                  (* the Julian day of Ptime.min *)
 let jd_ptime_max = 5_373_484                  (* the Julian day of Ptime.max *)
 
-(* Picosecond precision POSIX timestamps and span representation.
+(* Picosecond precision POSIX timestamps and time span representation.
 
    POSIX timestamps and spans are represented by int * int64 pairs
    with the int64 in the range [0L;86_399_999_999_999_999L]. A pair
@@ -83,104 +80,276 @@ let jd_ptime_max = 5_373_484                  (* the Julian day of Ptime.max *)
 
 type t = int * int64
 
-let ps_count_in_s    =      1_000_000_000_000L
-let ps_count_in_min  =     60_000_000_000_000L
-let ps_count_in_hour =   3600_000_000_000_000L
-let ps_count_in_day  = 86_400_000_000_000_000L
-let ps_day_max       = 86_399_999_999_999_999L
+let ps_count_in_ps    =                      1L
+let ps_count_in_ns    =                  1_000L
+let ps_count_in_100ns =                100_000L
+let ps_count_in_us    =              1_000_000L
+let ps_count_in_100us =            100_000_000L
+let ps_count_in_ms    =          1_000_000_000L
+let ps_count_in_100ms =        100_000_000_000L
+let ps_count_in_s     =      1_000_000_000_000L
+let ps_count_in_min   =     60_000_000_000_000L
+let ps_count_in_hour  =   3600_000_000_000_000L
+let ps_count_in_day   = 86_400_000_000_000_000L
+let ps_day_max        = 86_399_999_999_999_999L
 
-let neg = function
-| (s, 0L)  -> (-s, 0L)
-| (s, ps) -> (-(s + 1), Int64.sub ps_count_in_day ps)
-
-let add (d0, ps0) (d1, ps1) =
-  let d = d0 + d1 in
-  let ps = Int64.add ps0 ps1 in
-  let ps_clamp = Int64.rem ps ps_count_in_day in
-  let d = d + Int64.compare ps ps_clamp in
-  d, ps_clamp
-
-let sub t0 t1 = add t0 (neg t1)
-let span_abs (s, _ as t) = if s < 0 then neg t else t
-
-let equal t0 t1 = t0 = t1
-let compare (d0, ps0) (d1, ps1) =
-  let c = Pervasives.compare d0 d1 in
-  if c <> 0 then c else Pervasives.compare ps0 ps1
-
-let pp_raw ppf (d, ps) = Format.fprintf ppf "@[<1>(%d,@,%Ld)@]" d ps
-
-(* POSIX spans *)
+(* POSIX time spans *)
 
 type span = t
 
 module Span = struct
 
+  (* Arithmetic *)
+
+  let neg = function
+  | (d, 0L)  -> (-d, 0L)
+  | (d, ps) -> (-(d + 1), Int64.sub ps_count_in_day ps)
+
+  let add (d0, ps0) (d1, ps1) =
+    let d = d0 + d1 in
+    let ps = Int64.add ps0 ps1 in
+    let ps_clamp = Int64.rem ps ps_count_in_day in
+    let d = d + Int64.compare ps ps_clamp in
+    d, ps_clamp
+
+  let sub s0 s1 = add s0 (neg s1)
+  let abs (d, _ as s) = if d < 0 then neg s else s
+
+  (* POSIX time spans *)
+
   type t = span
 
-  let max_int_f = float max_int
-  let of_s secs =
-    let d = abs_float secs in
-    let days = d /. 86_400. in
-    if days > max_int_f || days <> days (* nan *)
-    then invalid_arg (err_span_float d (max_int_f *. 86_400.))
-    else
-    let frac_s, rem_s = modf (mod_float d 86_400.) in
+  let zero = (0, 0L)
+
+  let of_d_ps (d, ps as s) =
+    if ps < 0L || ps > ps_day_max
+    then invalid_arg (err_span_d_ps d ps ps_day_max)
+    else s
+
+  let of_int_s secs =
+    let d = Pervasives.abs secs in
+    let s = (d / 86_400, Int64.(mul (of_int (d mod 86_400)) ps_count_in_s)) in
+    if secs < 0 then neg s else s
+
+  let day_int_min = min_int / 86_400
+  let day_int_max = max_int / 86_400
+  let to_int_s (d, ps) =
+    if d < day_int_min || d > day_int_max then None else
+    let days_s = d * 86_400 in
+    let day_s = Int64.(to_int (div ps ps_count_in_s)) (* always positive *) in
+    let secs = days_s + day_s in
+    if secs < days_s (* positive overflow *) then None else Some secs
+
+  let to_d_ps s = s
+
+  let min_int_float = float min_int
+  let max_int_float = float max_int
+  let of_float_s secs =
+    if secs <> secs (* nan *) then None else
+    let days = floor (secs /. 86_400.) in
+    if days < min_int_float || days > max_int_float then None else
+    let rem_s = mod_float secs 86_400. in
+    let rem_s = if rem_s < 0. then 86_400. +. rem_s else rem_s in
+    if rem_s >= 86_400. then Some (int_of_float days + 1, 0L) else
+    let frac_s, rem_s = modf rem_s in
     let rem_ps = Int64.(mul (of_float rem_s) ps_count_in_s) in
     let frac_ps = Int64.(of_float (frac_s *. 1e12)) in
-    let span = truncate days, (Int64.add rem_ps frac_ps) in
-    if secs < 0. then neg span else span
+    Some (int_of_float days, (Int64.add rem_ps frac_ps))
 
-  let to_s (d, ps) =
+  let to_float_s (d, ps) =
     let days_s = (float d) *. 86_400. in
     let day_s = Int64.(to_float (div ps ps_count_in_s)) in
     let day_rem_ps = Int64.(to_float (rem ps ps_count_in_s)) in
     days_s +. day_s +. (day_rem_ps *. 1e-12)
 
-  let of_d_ps (d, ps) =
-    if 0L < ps && ps < ps_count_in_day then (d, ps) else
-    invalid_arg (err_span_d_ps d ps ps_count_in_day)
+  (* Predicates *)
 
-  let to_d_ps d = d
+  let equal s0 s1 = s0 = s1
+  let compare (d0, ps0) (d1, ps1) =
+    let c = Pervasives.compare d0 d1 in
+    if c <> 0 then c else Pervasives.compare ps0 ps1
 
-  let of_int_s d =
-    let s = abs d in
-    let s = (s / 86_400, Int64.(mul (of_int (s mod 86_400)) ps_count_in_s)) in
-    if d < 0 then neg s else s
+  (* Rounding *)
 
-  let equal = equal
-  let compare = compare
-  let pp_raw = pp_raw
-  let round x = floor (x +. 0.5)
+  let round_div a b = (* a >= 0 and b > 0 *)
+    if a = 0L then 0L else
+    Int64.(div (add a (div b 2L)) b)
+
+  let frac_div = [| 1_000_000_000_000L;
+                      100_000_000_000L;
+                       10_000_000_000L;
+                        1_000_000_000L;
+                          100_000_000L;
+                           10_000_000L;
+                            1_000_000L;
+                              100_000L;
+                               10_000L;
+                                1_000L;
+                                  100L;
+                                   10L;
+                                    1L; |]
+
+  let round ~frac_s:frac (sign, _ as t) =
+    if frac < 0 || frac > 12 then invalid_arg (err_frac_range 0 12 frac) else
+    let (d, ps) = if sign < 0 then neg t else t in
+    let rps = Int64.mul (round_div ps frac_div.(frac)) frac_div.(frac) in
+    let t = if rps > ps_day_max then (d + 1, 0L) else (d, rps) in
+    if sign < 0 then neg t else t
+
+  let truncate ~frac_s:frac (sign, _ as t) =
+    if frac < 0 || frac > 12 then invalid_arg (err_frac_range 0 12 frac) else
+    let (d, ps) = if sign < 0 then neg t else t in
+    let tps = Int64.(sub ps (rem ps frac_div.(frac))) in
+    if sign < 0 then neg (d, tps) else (d, tps)
+
+  (* Pretty printing *)
+
+  let pp_raw ppf (d, ps) = Format.fprintf ppf "@[<1>(%d,@,%Ld)@]" d ps
+
+  (* Warning laborious code follows. Is there a better way ? *)
+
+  let divide_ps ~carry ps hi lo =
+    let hi_d = Int64.(to_int (div ps hi)) in
+    let rem_ps = Int64.rem ps hi in
+    let lo_d = Int64.to_int (round_div rem_ps lo) in
+    if lo_d = carry then hi_d + 1, 0 else hi_d, lo_d
+
+  let pp_y_d ppf ~neg d ps = (* assert d >= 0 *)
+    let y, rem_d =
+      let max_d = max_int / 4 in
+      if d > max_d then (* d * 4 overflows *) d / 365, d mod 365 else
+      let y = (d * 4) / 1461 (* / 365.25 *) in
+      y, d - (y * 1461) / 4
+    in
+    let days = rem_d + Int64.to_int (round_div ps ps_count_in_day) in
+    let y, days = if days = 366 then y + 1, 1 else y, days in
+    let y = if neg then -y else y in
+    Format.fprintf ppf "%dy" y;
+    if days <> 0 then Format.fprintf ppf "%dd" days;
+    ()
+
+  let pp_d_h ppf ~neg d ps =
+    let h, _ = divide_ps ~carry:1 ps ps_count_in_hour ps_count_in_hour in
+    let d, h = if h = 24 then d + 1, 0 else d, h in
+    if d = 366 then Format.fprintf ppf "%dy1d" (if neg then -1 else 1) else
+    if d = 365 && h >= 6
+    then Format.fprintf ppf "%dy" (if neg then -1 else 1) else
+    let d = if neg then -d else d in
+    Format.fprintf ppf "%dd" d;
+    if h <> 0 then Format.fprintf ppf "%dh" h;
+    ()
+
+  let pp_h_m ppf ~neg ps =
+    let h, m = divide_ps ~carry:60 ps ps_count_in_hour ps_count_in_min in
+    if h = 24 then Format.fprintf ppf "%dd" (if neg then -1 else 1) else
+    let h = if neg then -h else h in
+    Format.fprintf ppf "%dh" h;
+    if m <> 0 then Format.fprintf ppf "%dmin" m;
+    ()
+
+  let pp_m_s ppf ~neg ps =
+    let m, s = divide_ps ~carry:60 ps ps_count_in_min ps_count_in_s in
+    if m = 60 then Format.fprintf ppf "%dh" (if neg then -1 else 1) else
+    let m = if neg then -m else m in
+    Format.fprintf ppf "%dmin" m;
+    if s <> 0 then Format.fprintf ppf "%ds" s;
+    ()
+
+  let pp_s ppf ~neg ps =
+    let s, ms = divide_ps ~carry:1000 ps ps_count_in_s ps_count_in_ms in
+    if s = 60 then Format.fprintf ppf "%dmin" (if neg then -1 else 1) else
+    let s = if neg then -s else s in
+    if ms <> 0 then Format.fprintf ppf "%d.%ds" s ms else
+    Format.fprintf ppf "%ds" s
+
+  let pp_unit higher_str hi hi_str frac_limit lo ppf ~neg ps =
+    let pp_unit_integral ppf ~neg h =
+      if h = 1000
+      then Format.fprintf ppf "%d%s" (if neg then -1 else 1) higher_str
+      else Format.fprintf ppf "%d%s" (if neg then -h else h) hi_str
+    in
+    if ps < frac_limit then begin
+      let h, l = divide_ps ~carry:1000 ps hi lo in
+      if h >= 100 || l = 0 then pp_unit_integral ppf ~neg h else
+      let h = if neg then -h else h in
+      Format.fprintf ppf "%d.%d%s" h l hi_str
+    end else begin
+      let ms, _ = divide_ps ~carry:1 ps hi hi in
+      pp_unit_integral ppf ~neg ms
+    end
+
+  let pp_ms =
+    pp_unit "s" ps_count_in_ms "ms" ps_count_in_100ms ps_count_in_us
+
+  let pp_us =
+    pp_unit "ms" ps_count_in_us "us" ps_count_in_100us ps_count_in_ns
+
+  let pp_ns =
+    pp_unit "us" ps_count_in_ns "ns" ps_count_in_100ns ps_count_in_ps
+
+  let pp_ps ppf ~neg ps =
+    let ps = Int64.to_int ps in
+    Format.fprintf ppf "%dps" (if neg then -ps else ps)
+
+  let pp ppf (sign, _ as s) =
+    let neg = sign < 0 in
+    match (abs s) with
+    | (0, ps) ->
+        if ps >= ps_count_in_hour then pp_h_m ppf ~neg ps else
+        if ps >= ps_count_in_min then pp_m_s ppf ~neg ps else
+        if ps >= ps_count_in_s then pp_s ppf ~neg ps else
+        if ps >= ps_count_in_ms then pp_ms ppf ~neg ps else
+        if ps >= ps_count_in_us then pp_us ppf ~neg ps else
+        if ps >= ps_count_in_ns then pp_ns ppf ~neg ps else
+        pp_ps ppf ~neg ps
+    | (d, ps) ->
+        if d > 365 then pp_y_d ppf neg d ps else
+        pp_d_h ppf neg d ps
 end
 
 (* POSIX timestamps *)
 
-let epoch =
-  (0, 0L) (* 1970-01-01 00:00:00 UTC *)
+let epoch = (* 1970-01-01 00:00:00 UTC *)
+  (0, 0L)
 
-let min =
-  (jd_ptime_min - jd_posix_epoch, 0L) (* 0000-01-01 00:00:00 UTC *)
+let min = (* 0000-01-01 00:00:00 UTC *)
+  (jd_ptime_min - jd_posix_epoch, 0L)
 
-let max =
-  (jd_ptime_max - jd_posix_epoch, ps_day_max) (* 9999-12-31 23:59:59 UTC *)
+let max = (* 9999-12-31 23:59:59 UTC *)
+  (jd_ptime_max - jd_posix_epoch, ps_day_max)
 
 let of_span span =
-  if compare span min = -1 || compare span max = 1 then None else
-  Some span
+  if compare span (* < *) min = -1 ||
+     compare span (* > *) max = 1
+  then None
+  else Some span
 
 let to_span t = t
 
+let of_float_s secs = match Span.of_float_s secs with
+| None -> None
+| Some d -> of_span d
+
+let to_float_s = Span.to_float_s
+
+let truncate = Span.truncate
+
+let s_frac (sign, _ as t) =
+  let (_, ps) = if sign < 0 then Span.neg t else t in
+  (0, Int64.(rem ps ps_count_in_s))
+
 (* Predicates *)
 
+let equal = Span.equal
+let compare = Span.compare
 let is_earlier t ~than = compare t than = -1
 let is_later t ~than = compare t than = 1
 
 (* POSIX arithmetic *)
 
-let add_span t d = of_span (add t d)
-let sub_span t d = of_span (sub t d)
-let diff t1 t0 = sub t1 t0
+let add_span t d = of_span (Span.add t d)
+let sub_span t d = of_span (Span.sub t d)
+let diff t1 t0 = Span.sub t1 t0
 
 (* Time zone offsets between local and UTC timelines *)
 
@@ -218,7 +387,7 @@ let of_date_time (date, ((hh, mm, ss), tz_offset_s as t)) =
      days since the epoch for the given proleptic Georgian calendar
      date. This gives us the POSIX day component of the timestamp. The
      remaining time fields are used to derive the picosecond precision
-     time in that day componsated by the time zone offset. The final
+     time in that day compensated by the time zone offset. The final
      result is checked to be in Ptime's [min;max] range.
 
      By definition POSIX timestamps cannot represent leap seconds.
@@ -250,7 +419,7 @@ let to_date_time ?(tz_offset_s = 0) t =
 
      We first take take the POSIX day count [d] (equivalent by
      definition to an UTC day count) from the epoch, convert it to a
-     Julian Day and use this to get the proleptic Gregorian calendar
+     Julian day and use this to get the proleptic Gregorian calendar
      date. The POSIX picoseconds [ps] in the day are are converted to
      a daytime according to to its various units.
 
@@ -414,7 +583,7 @@ let of_rfc3339 ?last ?(strict = false) ?(pos = 0) ?len s =
         let r = match frac with
         | None | Some 0L -> t, tz_s
         | Some frac ->
-            match of_span (add t (0, frac)) with
+            match add_span t (0, frac) with
             | None -> error (pos, last_pos) `Invalid_stamp
             | Some t -> t, tz_s
         in
@@ -442,22 +611,9 @@ let rfc3339_adjust_tz_offset tz_offset_s =
   then tz_offset_s
   else 0 (* UTC *)
 
-let frac_div = [| 100_000_000_000L;
-                   10_000_000_000L;
-                    1_000_000_000L;
-                      100_000_000L;
-                       10_000_000L;
-                        1_000_000L;
-                          100_000L;
-                           10_000L;
-                            1_000L;
-                              100L;
-                               10L;
-                                1L; |]
-
 let s_frac_of_ps frac ps =
   if frac < 0 || frac > 12 then invalid_arg (err_frac_range 0 12 frac) else
-  Int64.(div (rem ps ps_count_in_s) frac_div.(frac - 1))
+  Int64.(div (rem ps ps_count_in_s) Span.frac_div.(frac))
 
 let to_rfc3339 ?(space = false) ?(frac = 0) ?(tz_offset_s = 0) (_, ps as t) =
   let buf = Buffer.create 255 in
@@ -481,6 +637,7 @@ let pp_rfc3339 ?space ?frac ?tz_offset_s () ppf t =
 
 (* Pretty printing *)
 
+let pp_raw = Span.pp_raw
 let pp ?(frac = 0) ?(tz_offset_s = 0) () ppf (_, ps as t) =
   let tz_offset_s = rfc3339_adjust_tz_offset tz_offset_s in
   let (y, m, d), ((hh, ss, mm), tz_offset_s) = to_date_time ~tz_offset_s t in

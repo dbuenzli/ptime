@@ -16,6 +16,7 @@ type 'a pp = Format.formatter -> 'a -> unit
 let pp = Format.fprintf
 let pp_exn ppf v = pp ppf "%s" (Printexc.to_string v)
 let pp_str ppf v = pp ppf "%s" v
+let pp_int = Format.pp_print_int
 let pp_float ppf v = pp ppf "%.10f" (* bof... *) v
 let pp_int32 ppf v = pp ppf "%ld" v
 let pp_int64 ppf v = pp ppf "%Ld" v
@@ -79,12 +80,16 @@ let log_unexpected_exn ~header exn bt =
 exception Fail
 exception Fail_handled
 
-let suite n f () = try log "%s" n; f () with
+let block f = try f () with
+| Fail | Fail_handled -> ()
 | exn ->
     let bt = Printexc.get_raw_backtrace () in
-    log_unexpected_exn ~header:"SUITE" exn bt
+    log_unexpected_exn ~header:"BLOCK" exn bt
 
-let test n f () =
+type test = string * (unit -> unit)
+
+let test n f = n, f
+let run_test (n, f) =
   log "* %s" n;
   try f () with
   | Fail | Fail_handled ->
@@ -93,11 +98,14 @@ let test n f () =
       let bt = Printexc.get_raw_backtrace () in
       log_unexpected_exn ~header:"TEST" exn bt
 
-let block f = try f () with
-| Fail | Fail_handled -> ()
+type suite = string * test list
+let suite n ts = n, ts
+let run_suite (n, ts) = try log "%s" n; List.iter run_test ts with
 | exn ->
     let bt = Printexc.get_raw_backtrace () in
-    log_unexpected_exn ~header:"BLOCK" exn bt
+    log_unexpected_exn ~header:"SUITE" exn bt
+
+let run suites = List.iter run_suite suites
 
 (* Passing and failing tests *)
 
@@ -120,7 +128,8 @@ let eq_int = eq ~eq:(=) ~pp:Format.pp_print_int
 let eq_int32 = eq ~eq:(=) ~pp:pp_int32
 let eq_int64 = eq ~eq:(=) ~pp:pp_int64
 let eq_float = eq ~eq:(=) ~pp:pp_float
-let eq_nan f = if f <> f then pass () else fail "@[%a@]@ is@ not a NaN" pp_float f
+let eq_nan f =
+  if f <> f then pass () else fail "@[%a@]@ is@ not a NaN" pp_float f
 
 let eq_option ~eq:eq_v ~pp =
   let eq_opt v v' = match v, v' with

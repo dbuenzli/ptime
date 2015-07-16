@@ -4,14 +4,12 @@
    %%NAME%% release %%VERSION%%
   ---------------------------------------------------------------------------*)
 
-open Testing
-
-let tests () =
-  Test_base.suite ();
-  Test_date.suite ();
-  Test_date_time.suite ();
-  Test_rfc3339.suite ();
-  ()
+let tests () = Testing.run
+    [ Test_span.suite;
+      Test_base.suite;
+      Test_date.suite;
+      Test_date_time.suite;
+      Test_rfc3339.suite; ]
 
 let run () =
   Test_rand.cmdline ();

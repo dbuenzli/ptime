@@ -8,16 +8,15 @@ open Testing
 open Testing_ptime
 
 let stamp_of_date_time d =
-  (Ptime.of_date_time $ raw_date_time @-> ret_get_option raw_stamp) d
+  (Ptime.of_date_time $ raw_date_time @-> ret_get_option stamp) d
 
 let valid_date_time d =
-  ignore ((Ptime.of_date_time $ raw_date_time @-> ret_some raw_stamp) d)
+  ignore ((Ptime.of_date_time $ raw_date_time @-> ret_some stamp) d)
 
 let wrong_date_time d =
-  ignore ((Ptime.of_date_time $ raw_date_time @-> ret_none raw_stamp) d)
+  ignore ((Ptime.of_date_time $ raw_date_time @-> ret_none stamp) d)
 
-let time_bounds =
-  test "Date-time time field bounds" @@ fun () ->
+let time_bounds = test "Date-time time field bounds" @@ fun () ->
   let min_date = Ptime.to_date Ptime.min in
   let min_utc t = min_date, (t, 0) in
   (* Check hour bounds *)
@@ -44,8 +43,7 @@ let time_bounds =
   wrong_date_time (min_utc (00, 00, 61));
   ()
 
-let tz =
-  test "Testing date-time timezone calculations" @@ fun () ->
+let tz = test "Testing date-time timezone calculations" @@ fun () ->
   (* Timestamps with tz offsets around Ptime.{max,min} *)
   wrong_date_time ((0000, 01, 01), ((00, 00, 00), +1));
   valid_date_time ((0000, 01, 01), ((00, 00, 00), +0));
@@ -70,59 +68,55 @@ let tz =
   eq_date_time (Ptime.to_date_time ~tz_offset_s:lau_tz nyc_stamp) lausanne;
   ()
 
-let subsecond =
-  test "Subsecond stamp to date-time floors seconds" @@ fun () ->
+let subsecond = test "Subsecond stamp to date-time" @@ fun () ->
   let add, sub =
-    let add t s = Ptime.(add_span t (Span.of_s s)) in
-    let sub t s = Ptime.(sub_span t (Span.of_s s)) in
-    add $ raw_stamp @-> pp_float @-> ret_get_option raw_stamp,
-    sub $ raw_stamp @-> pp_float @-> ret_get_option raw_stamp
+    let add t ps = Ptime.(add_span t (Span.of_d_ps (0, ps))) in
+    let sub t ps = Ptime.(sub_span t (Span.of_d_ps (0, ps))) in
+    add $ stamp @-> int64 @-> ret_get_option stamp,
+    sub $ stamp @-> int64 @-> ret_get_option stamp
   in
-  let b0 = sub Ptime.epoch 0.75 in
-  let b1 = sub Ptime.epoch 0.5 in
-  let b2 = sub Ptime.epoch 0.25 in
+  let b0 = sub Ptime.epoch 750_000_000_000L in
+  let b1 = sub Ptime.epoch 500_000_000_000L in
+  let b2 = sub Ptime.epoch 250_000_000_000L in
   let b = (1969, 12, 31), ((23, 59, 59), +0) in
   eq_date_time b (Ptime.to_date_time b0);
   eq_date_time b (Ptime.to_date_time b1);
   eq_date_time b (Ptime.to_date_time b2);
-  let a0 = add Ptime.epoch 0.75 in
-  let a1 = add Ptime.epoch 0.5 in
-  let a2 = add Ptime.epoch 0.25 in
+  let a0 = add Ptime.epoch 750_000_000_000L in
+  let a1 = add Ptime.epoch 500_000_000_000L in
+  let a2 = add Ptime.epoch 250_000_000_000L in
   let a = (1970, 01, 01), ((00, 00, 00), +0) in
   eq_date_time a (Ptime.to_date_time a0);
   eq_date_time a (Ptime.to_date_time a1);
   eq_date_time a (Ptime.to_date_time a2);
   ()
 
-let leap_sec =
-  test "Testing leap second date-times" @@ fun () ->
+let leap_sec = test "Testing leap second date-times" @@ fun () ->
   let after_leap_sec = (1999, 01, 01), ((00, 00, 00), 0) in
   let t0 = stamp_of_date_time ((1998, 12, 31), ((23, 59, 59), 0)) in
   let t1 = stamp_of_date_time ((1998, 12, 31), ((23, 59, 60), 0)) in
   let t2 = stamp_of_date_time after_leap_sec in
   eq_stamp t1 t2; (* leap sec is represented by second that comes after *)
-  eq_stamp_opt (Some t1) Ptime.(add_span t0 (Span.of_s 1.));
+  eq_stamp_opt (Some t1) Ptime.(add_span t0 (Span.of_int_s 1));
   eq_date_time after_leap_sec (Ptime.to_date_time t1);
   eq_date_time after_leap_sec (Ptime.to_date_time t2);
-  eq_float Ptime.(Span.to_s (diff t2 t0)) 1.;
-  eq_float Ptime.(Span.to_s (diff t1 t0)) 1.;
-  eq_float Ptime.(Span.to_s (diff t2 t1)) 0.;
+  eq_span (Ptime.diff t2 t0) (Ptime.Span.of_int_s 1);
+  eq_span (Ptime.diff t1 t0) (Ptime.Span.of_int_s 1);
+  eq_span (Ptime.diff t2 t1) (Ptime.Span.of_int_s 0);
   ()
 
-let stamp_trips =
-  test "Random stamps to date-time round trips" @@ fun () ->
+let stamp_trips = test "Random stamps to date-time round trips" @@ fun () ->
   let stamp_of_posix_s =
-    let of_posix_s s = Ptime.(of_span (Span.of_s s)) in
-    of_posix_s $ pp_float @-> (ret_get_option raw_stamp)
+    Ptime.of_float_s $ pp_float @-> (ret_get_option stamp)
   in
   let trip ?tz_offset_s t =
-    let back = stamp_of_posix_s (floor (Ptime.(Span.to_s (to_span t)))) in
+    let back = stamp_of_posix_s (floor (Ptime.to_float_s t)) in
     let trip = stamp_of_date_time (Ptime.to_date_time ?tz_offset_s t) in
     eq_stamp back trip
   in
   for i = 1 to Test_rand.loop_len () do
-    trip ~tz_offset_s:0 (* UTC *) (Test_rand.stamp ());
-    trip ~tz_offset_s:(Test_rand.tz_offset_s ()) (Test_rand.stamp ())
+    trip ~tz_offset_s:0 (* UTC *) (Test_rand.float_stamp ());
+    trip ~tz_offset_s:(Test_rand.tz_offset_s ()) (Test_rand.float_stamp ())
   done
 
 let round_trips =
@@ -146,8 +140,9 @@ let round_trips =
         end
   in
   let add_posix_s =
-    let add_posix_s t s = Ptime.(add_span t (Span.of_s s)) in
-    add_posix_s $ raw_stamp @-> pp_float @-> ret_get_option raw_stamp
+    let span = Ptime.Span.of_float_s $ pp_float @-> ret_get_option span in
+    let add_posix_s t s = Ptime.(add_span t (span s)) in
+    add_posix_s $ stamp @-> pp_float @-> ret_get_option stamp
   in
   for i = 1 to Test_rand.loop_len () do
     let (_, (_, tz_offset_s) as dt) = rand_date_time_stamp () in
@@ -166,15 +161,13 @@ let round_trips =
   done;
   ()
 
-let suite =
-  suite "Ptime date-time tests" @@ fun () ->
-  time_bounds ();
-  tz ();
-  subsecond ();
-  leap_sec ();
-  stamp_trips ();
-  round_trips ();
-  ()
+let suite = suite "Ptime date-time tests"
+    [ time_bounds;
+      tz;
+      subsecond;
+      leap_sec;
+      stamp_trips;
+      round_trips; ]
 
 (*---------------------------------------------------------------------------
    Copyright (c) 2015 Daniel C. Bünzli.

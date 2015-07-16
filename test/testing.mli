@@ -13,6 +13,7 @@ type 'a pp = Format.formatter -> 'a -> unit
 
 (* {1 Pretty printers} *)
 
+val pp_int : int pp
 val pp_float : float pp
 val pp_str : string pp
 
@@ -24,9 +25,14 @@ val log_results : unit -> bool
 
 (* {1 Testing scopes} *)
 
-val suite : string -> (unit -> unit) -> unit -> unit
-val test : string -> (unit -> unit) -> unit -> unit
+type test
+type suite
+
 val block : (unit -> unit) -> unit
+val test : string -> (unit -> unit) -> test
+val suite : string -> test list -> suite
+
+val run : suite list -> unit
 
 (* {1 Passing and failing tests} *)
 

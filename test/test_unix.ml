@@ -7,13 +7,14 @@
 open Testing
 open Testing_ptime
 
-let rand_stamp = Test_rand.(if Sys.word_size = 32 then stamp_32bits else stamp)
+let rand_stamp =
+  Test_rand.(if Sys.word_size = 32 then float_stamp_32bits else float_stamp)
+
 let value_of_posix_s =
-  let of_posix_s s = Ptime.(of_span (Span.of_s s)) in
-  of_posix_s $ pp_float @-> (ret_get_option raw_stamp)
+  Ptime.of_float_s $ pp_float @-> (ret_get_option stamp)
 
 let unix_to_date_time t =
-  let t = Ptime.(Span.to_s (to_span t)) in
+  let t = Ptime.to_float_s t in
   let t = floor t (* see http://caml.inria.fr/mantis/view.php?id=6921 *) in
   let tm = Unix.gmtime t in
   let d = (tm.Unix.tm_year + 1900), (tm.Unix.tm_mon + 1), (tm.Unix.tm_mday) in
@@ -26,20 +27,20 @@ let compare t =
   eq_date_time dt ut;
   dt
 
-let compare = compare $ raw_stamp @-> ret raw_date_time
+let compare = compare $ stamp @-> ret raw_date_time
 
 let stamp_to_date_time =
   Testing.test "Random Ptime-valid stamps to date-time" @@ fun () ->
   if Sys.word_size > 32 then begin
     ignore (compare Ptime.min);
-    ignore (compare Ptime.max);
+    ignore (compare Ptime.(truncate ~frac_s:0 max));
   end;
   for i = 1 to Test_rand.loop_len () do ignore (compare (rand_stamp ())) done;
   ()
 
 let exhaustive_min_max =
   if Sys.word_size > 32
-  then Ptime.(Span.to_s (to_span min)), Ptime.(Span.to_s (to_span max))
+  then Ptime.(to_float_s min), Ptime.(to_float_s  (truncate ~frac_s:0 max))
   else Int32.(to_float min_int), Int32.(to_float max_int)
 
 let exhaustive =
@@ -56,11 +57,10 @@ let exhaustive =
 
 let exhaustive_test = ref false
 
-let suite =
-  Testing.suite "Ptime tests against Unix.gmtime" @@ fun () ->
-  stamp_to_date_time ();
-  if !exhaustive_test then exhaustive ();
-  ()
+let suite () =
+  Testing.suite "Ptime tests against Unix.gmtime" @@
+  [ stamp_to_date_time; ] @
+  if !exhaustive_test then [exhaustive] else []
 
 let exhaustive =
   "-e", Arg.Set exhaustive_test,
@@ -68,7 +68,7 @@ let exhaustive =
 
 let run () =
   Test_rand.cmdline ~opts:[exhaustive] ();
-  suite ();
+  Testing.run [suite ()];
   Testing.log_results ()
 
 let () = if run () then exit 0 else exit 1

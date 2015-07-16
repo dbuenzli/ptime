@@ -8,16 +8,15 @@ open Testing
 open Testing_ptime
 
 let stamp_of_date_time d =
-  (Ptime.of_date_time $ raw_date_time @-> ret_get_option raw_stamp) d
+  (Ptime.of_date_time $ raw_date_time @-> ret_get_option stamp) d
 
 let valid_date d =
-  ignore ((Ptime.of_date $ raw_date @-> ret_some raw_stamp) d)
+  ignore ((Ptime.of_date $ raw_date @-> ret_some stamp) d)
 
 let wrong_date d =
-  ignore ((Ptime.of_date $ raw_date @-> ret_none raw_stamp) d)
+  ignore ((Ptime.of_date $ raw_date @-> ret_none stamp) d)
 
-let bounds =
-  test "Testing calendar date field bounds" @@ fun () ->
+let bounds = test "Testing calendar date field bounds" @@ fun () ->
   (* Check year bounds *)
   wrong_date (-1, 01, 01);
   valid_date (0, 01, 01);
@@ -119,9 +118,8 @@ let bounds =
   wrong_date (2100, 02, 29);
   ()
 
-let stamp_trips =
-  test "Random valid dates to stamps round trips" @@ fun () ->
-  let of_date = Ptime.of_date $ raw_date @-> ret_get_option raw_stamp in
+let stamp_trips = test "Random valid dates to stamps round trips" @@ fun () ->
+  let of_date = Ptime.of_date $ raw_date @-> ret_get_option stamp in
   for i = 1 to Test_rand.loop_len () do
     let date = Test_rand.date () in
     let trip = Ptime.to_date (of_date date) in
@@ -129,11 +127,9 @@ let stamp_trips =
   done;
   ()
 
-let suite =
-  suite "Ptime date tests" @@ fun () ->
-  bounds ();
-  stamp_trips ();
-  ()
+let suite = suite "Ptime date tests"
+    [ bounds;
+      stamp_trips; ]
 
 (*---------------------------------------------------------------------------
    Copyright (c) 2015 Daniel C. Bünzli.

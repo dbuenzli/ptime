@@ -23,66 +23,84 @@
     {- The Open Group. {{:http://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap04.html#tag_04_15}The Open Group Base Specifications Issue 7, section 4.15 Seconds Since the Epoch}. 2013}
     {- G. Klyne et al.
     {{:http://tools.ietf.org/html/rfc3339}
-    {e Date and Time on the Internet: Timestamps}}. RFC 3339, 2002}}
+    {e Date and Time on the Internet: Timestamps}}. RFC 3339, 2002.}}
 
     {e Release %%VERSION%% - %%MAINTAINER%% } *)
 
 open Rresult
 
-(** {1:timespans POSIX spans} *)
+(** {1:timespans POSIX time spans} *)
 
 type span
-(** The type for signed picosecond precision POSIX spans. A value
-    of this type represent the duration between two POSIX timestamps. *)
+(** The type for signed picosecond precision POSIX time spans. A value
+    of this type represent the POSIX duration between two POSIX
+    timestamps. *)
 
-(** POSIX spans.
+(** POSIX time spans.
 
-    {b FIXME.} With this new interface the limits are a bit less clear
-    than they used to be. I think the [Invalid_arguments] should be
-    replaced by options (at least for [of_s]), but this becomes
-    painful with {!of_span}, should we inline the option monad there ?
-    Also should we limit the range of {!span} to the span {!Ptime.max} -
-    {!Ptime.min} ?
-
-    {b WARNING.} A POSIX time span is not equal to an SI-based time
+    {b WARNING.} A POSIX time span is not equal to an SI second based time
     span see the {{!basics}basics}. *)
 module Span : sig
 
-  (** {1:spans POSIX durations} *)
+  (** {1:spans POSIX time spans} *)
 
   type t = span
-  (** The type for for signed, picosecond precision, POSIX spans. *)
+  (** The type for for signed, picosecond precision, POSIX time spans. *)
 
-  val of_s : float -> span
-  (** [of_s secs] is a span for the signed POSIX second duration [secs].
-      [secs]'s precision is considered up to the picosecond, i.e. [1e-12].
-
-      @raise Invalid_argument if the integral part of [abs_float secs]
-      is not in the range \[0; {!max_int} *. 86_400.\]. *)
-
-  val to_s : span -> float
-  (** [to_s d] is the span [d] as POSIX seconds.
-
-      {b FIXME.} This may not be read back by [of_s], should
-      we rather limit [span] ? *)
+  val zero : span
+  (** [zero] is the neutral element of {!add}. *)
 
   val of_d_ps : int * int64 -> span
   (** [of_d_ps (d, ps)] is a span for the signed POSIX picosecond
-      duration [d] * 86_400e12 + [ps]. [d] is a signed number of POSIX
+      span [d] * 86_400e12 + [ps]. [d] is a signed number of POSIX
       days and [ps] a number of picoseconds in the range
       \[[0];[86_399_999_999_999_999L]\].
 
-      @raise Invalid_argument if [ns] is not in the right range. *)
+      @raise Invalid_argument if [ps] is not in the right range. *)
 
   val to_d_ps : span -> int * int64
   (** [to_d_ps d] is the span [d] as a pair [(d, ps)] expressing the
-      POSIX picosecond duration [d] * 86_400e12 + [ps] with
+      POSIX picosecond span [d] * 86_400e12 + [ps] with
       [ps] in the range \[[0];[86_399_999_999_999_999L]\] *)
 
-(*
+  val of_int_s : int -> span
+  (** [of_int_s secs] is a span from the signed integer POSIX second
+      span [secs]. *)
+
+  val to_int_s : span -> int option
+  (** [to_int_s d] is the span [d] as a signed integer POSIX second
+      span, if [int]'s range can represent it (note that this
+      depends on {!Sys.word_size}). Subsecond precision numbers are
+      truncated. *)
+
+  val of_float_s : float -> span option
+  (** [of_float_s secs] is a span from the signed floating point POSIX
+      second span [d]. Subpicosecond precision numbers are truncated.
+
+      [None] is returned if [secs] cannot be represented as a span.
+      This occurs on {!Pervasives.nan} or if the duration in POSIX
+      days cannot fit on an [int] (on 32-bit platforms this means the
+      absolute magnitude of the duration is greater than ~2'941'758
+      years). *)
+
+  val to_float_s : span -> float
+  (** [to_float_s s] is the span [d] as floating point POSIX seconds.
+
+      {b Warning.} The magnitude of [s] may not be represented exactly
+      by the floating point value. *)
+
+  (** {1:predicates Predicates} *)
+
+  val equal : span -> span -> bool
+  (** [equal d d'] is [true] iff [d] and [d'] are the same time span. *)
+
+  val compare : span -> span -> int
+  (** [compare d d'] is a total order on durations that is compatible
+      with signed time span order. *)
+
   (** {1:arith Arithmetic}
 
-      {b Warning.} The following functions rollover on overflows. *)
+      {b Note.} The following functions rollover on overflows. *)
 
   val neg : span -> span
   (** [neg d] is the span [d] negated. *)
@@ -95,16 +113,20 @@ module Span : sig
 
   val abs : span -> span
   (** [abs d] is the absolute value of span [d]. *)
-*)
 
-  (** {1:predicates Predicates} *)
+  (** {1:rounding Rounding} *)
 
-  val equal : t -> t -> bool
-  (** [equal d d'] is [true] iff [d] and [d'] are the same durations. *)
+  val round : frac_s:int -> span -> span
+  (** [round ~frac_s t] is [t] rounded to [frac_s]'s decimal
+      fractional second. Ties are rounded away from zero.
 
-  val compare : t -> t -> int
-  (** [compare d d'] is a total order on durations that is compatible
-      with signed duration order. *)
+      @raise Invalid_argument if [frac] is not in the range \[[0];[12]\]. *)
+
+  val truncate : frac_s:int -> span -> span
+  (** [truncate ~frac_s t] is [t] truncated to [frac_s] decimal fractional
+      second.
+
+      @raise Invalid_argument if [frac] is not in the range \[[0];[12]\]. *)
 
   (** {1:print Pretty printing} *)
 
@@ -112,7 +134,6 @@ module Span : sig
   (** [pp_raw ppf s] prints an unspecified raw representation of [d]
       on [ppf]. *)
 
-(*
   val pp : Format.formatter -> span -> unit
   (** [pp_span ppf d] prints an unspecified representation of [d] on
       [ppf].  The representation is not fixed-width, depends on the
@@ -123,8 +144,11 @@ module Span : sig
       non-SI units}. Years are counted in Julian years (365.25
       SI-accepted days) as
       {{:http://www.iau.org/publications/proceedings_rules/units/}defined}
-      by the International Astronomical Union (IUA). *)
-*)
+      by the International Astronomical Union (IUA).
+
+      {b Warning} Becomes unprecise (but does not overflow) if the
+      absolute number of POSIX days in the time span is greater than [max_int /
+      4] (on 32-bit platforms this is ~735'439 years) *)
 end
 
 (** {1:timestamps POSIX timestamps} *)
@@ -142,23 +166,45 @@ val min : t
     representable by {!Ptime}. *)
 
 val max : t
-(** [max] is 9999-12-31 23:59:59 UTC, the latest timestamp
+(** [max] is 9999-12-31 23:59:59.999999999999 UTC, the latest timestamp
     representable by {!Ptime}. *)
 
 val of_span : span -> t option
 (** [of_span d] is the POSIX time stamp that:
     {ul
-    {- Happens at the duration [d] {e after} {!epoch} if [d] is positive.}
-    {- Happens at the duration [d] {e before} {!epoch} if [d] is negative.}}
+    {- Happens at the POSIX span [d] {e after} {!epoch}
+       if [d] is positive.}
+    {- Happens at the POSIX span [d] {e before} {!epoch}
+       if [d] is negative.}}
     [None] is returned if the timestamp is not in the range
     \[{!min};{!max}\]. *)
 
 val to_span : t -> span
-(** [to_span t] is the signed POSIX duration that happen between [t]
+(** [to_span t] is the signed POSIX span that happen between [t]
     and {!epoch}:
     {ul
     {- If the number is positive [t] happens {e after} {!epoch}.}
     {- If the number is negative [t] happens {e before} {!epoch}.}} *)
+
+val of_float_s : float -> t option
+(** [of_float_s d] is like {!of_span} but with [d] as a floating point
+    second POSIX span [d]. This function is compatible with the result
+    of {!Unix.gettimeofday}. Decimal fractional seconds beyond [1e-12]
+    are truncated. *)
+
+val to_float_s : t -> float
+(** [to_float_s t] is like {!to_span} but returns a floating point second
+    POSIX span. *)
+
+val truncate : frac_s:int -> t -> t
+(** [truncate ~frac_s t] is [t] truncated to [frac_s] decimal
+    fractional second. Effectively this reduces precision without rounding,
+    the timestamp remains in the second it is in.
+
+    @raise Invalid_argument if [frac] is not in the range \[[0];[12]\]. *)
+
+val s_frac : t -> span
+(** [s_frac t] is the fractional second duration in [t]. *)
 
 (** {1:predicates Predicates} *)
 
@@ -177,10 +223,10 @@ val is_later : t -> than:t -> bool
 
 (** {1:posix_arithmetic POSIX arithmetic}
 
-    {b WARNING.} A POSIX span is not equal to an SI-based time span,
-    see the {{!basics}basics}. Do not use these functions to perform
-    calendar arithmetic or measure wall-clock durations, you will
-    fail. *)
+    {b WARNING.} A POSIX time span is not equal to an SI second based
+    time span, see the {{!basics}basics}. Do not use these functions
+    to perform calendar arithmetic or measure wall-clock durations,
+    you will fail. *)
 
 val add_span : t -> span -> t option
 (** [add_span t d] is timestamp [t + d], that is [t] with the signed
@@ -189,8 +235,8 @@ val add_span : t -> span -> t option
 
 val sub_span : t -> span -> t option
 (** [sub_span t d] is the timestamp [t - d], that is [t] with the
-    POSIX span [d] subtracted. [None] is returned if the result is not
-    in the range \[{!min};{!max}\]. *)
+    signed POSIX span [d] subtracted. [None] is returned if the result
+    is not in the range \[{!min};{!max}\]. *)
 
 val diff : t -> t -> span
 (** [diff t t'] is the signed POSIX span [t - t'] that happens between
@@ -277,8 +323,7 @@ val to_date_time : ?tz_offset_s:int -> t -> date * time
     assume it will be the one you gave to the function. Note that for
     real-world time zone offsets the fallback to [0] will only happen
     around {!Ptime.min} and {!Ptime.max}.  Formally the fallback
-    occurs whenever {!add_span} [t d] is [None] where [d] is
-    [tz_offset_s] as a span value.
+    occurs whenever [add_span t (Span.of_int_s tz_offset_s)] is [None].
 
     {b Leap seconds.} No POSIX timestamp can represent a date-time
     with a leap second added, hence this function will never return a
@@ -350,11 +395,10 @@ val of_rfc3339 : ?last:int ref -> ?strict:bool -> ?pos:int -> ?len:int ->
        correspond to timestamps that cannot be expressed in UTC in RFC
        3339 itself (e.g. [0000-01-01T00:00:00+00:01]). The function
        errors on these timestamps with [`Invalid_stamp] as they cannot
-       be represented on in the range \[{!min};{!max}\].}
+       be represented in the range \[{!min};{!max}\].}
     {- Leap seconds are allowed on any date-time and handled as in
        {!of_date_time}}
-    {- Fractional part of a timestamp is truncated beyond the
-       picosecond (1e-12).}} *)
+    {- Fractional parts beyond the picosecond ([1e-12]) are truncated.}} *)
 
 val to_rfc3339 : ?space:bool -> ?frac:int -> ?tz_offset_s:tz_offset_s ->
   t -> string
@@ -367,9 +411,8 @@ val to_rfc3339 : ?space:bool -> ?frac:int -> ?tz_offset_s:tz_offset_s ->
        [0], i.e.  UTC). The hint is ignored and [0] is used in the
        following cases: if [tz_offset_s] is not an integral number of
        minutes and its magnitude not in the range permitted by the
-       standard, if {!add_span} [t d] is [None] where [d] is
-       tz_offset_s as a span value (the resulting timestamp rendering
-       would not be RFC 3339 compliant).}
+       standard, if [add_span t (Span.of_int_s tz_offset_s)] is [None]
+       (the resulting timestamp rendering would not be RFC 3339 compliant).}
     {- [frac] in the range \[[0];[12]\] specifies that exactly
        [frac]th decimal digits of the fractional second of [t] are
        rendered (defaults to [0]).}
@@ -398,8 +441,7 @@ val pp : ?frac:int -> ?tz_offset_s:tz_offset_s -> unit -> Format.formatter ->
        [0], i.e.  UTC). The hint is ignored and [0] is used in the
        following cases: if [tz_offset_s] is not an integral number of
        minutes and its magnitude not in the range permitted by the
-       standard, if {!add_span} [t d] is [None] where [d] is
-       tz_offset_s as a span value.}
+       standard, if [add_span t (Span.of_int_s tz_offset_s)] is [None].}
     {- [frac] in the the range \[[0];[12]\] specifies that exactly
        [frac]th decimal digits of the fractional second of [t] are
        rendered (defaults to [0]).}}
@@ -435,7 +477,7 @@ val pp_top : Format.formatter -> t -> unit
 
     This decision has the following implications. First it should be
     realised that the durations mentioned by the {!add_span},
-    {!sub_span} and {!diff_span} functions are expressed in {e
+    {!sub_span} and {!diff} functions are expressed in {e
     POSIX seconds} which may represent zero, one, or two SI
     seconds. For example if we add 1 second with
     {!add_span} to the POSIX timestamp for 1998-12-31 23:59:59 UTC,
@@ -445,12 +487,12 @@ let get = function None -> assert false | Some v -> v
 let utc d t = get @@ Ptime.of_date_time (d, (t, 0))
 let t0 = utc (1998, 12, 31) (23, 59, 59)
 let t1 = utc (1999, 01, 01) (00, 00, 00)
-let one_s = Ptime.Span.of_s 1.
+let one_s = Ptime.Span.of_int_s 1
 let () = assert (Ptime.equal (get @@ Ptime.add_span t0 one_s) t1)
 ]}
     However since the leap second 1998-12-31 23:59:60 UTC exists,
     {e two} actual SI seconds elapsed between [t0] and [t1]. Now if we use
-    {!diff_span} to find the POSIX duration that elapsed between
+    {!diff} to find the POSIX duration that elapsed between
     [t0] and [t1] we get one POSIX second:
 {[
 let () = assert (Ptime.Span.equal (Ptime.diff t1 t0) one_s)
@@ -480,7 +522,7 @@ let () = assert (Ptime.equal t1 t2)
 let y = 9999 (* hypothetical year were this happens *)
 let t0 = utc (y, 06, 30) (23, 59, 58)
 let t1 = utc (y, 07, 01) (00, 00, 00)
-let two_s = Ptime.Span.of_s 2.
+let two_s = Ptime.Span.of_int_s 2
 let () = assert (Ptime.Span.equal (Ptime.diff t1 t0) two_s)
 ]}
     We get two POSIX seconds, but only one SI second
@@ -492,7 +534,7 @@ let () = assert (Ptime.Span.equal (Ptime.diff t1 t0) two_s)
     it never existed:
 {[
 let t2 = utc (y, 06, 30) (23, 59, 59)
-let () = assert (Ptime.equal (get @@ Ptime.add_span t0 two_s) t2)
+let () = assert (Ptime.equal (get @@ Ptime.add_span t0 one_s) t2)
 ]}
 
     {1:notes Notes and limitations}

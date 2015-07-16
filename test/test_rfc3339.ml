@@ -9,7 +9,7 @@ open Testing
 open Testing_ptime
 
 let pp_result ppf r =
-  let pp_ok ppf (t, tz) = Format.fprintf ppf "(%a, %d)" raw_stamp t tz in
+  let pp_ok ppf (t, tz) = Format.fprintf ppf "(%a, %d)" stamp t tz in
   let pp_error ppf = function `RFC3339 ((s, e), err) ->
     Format.fprintf ppf "@[<1>%d-%d:@ @[%a@]@]" s e Ptime.pp_rfc3339_error err
   in
@@ -25,20 +25,18 @@ let stamp_of_rfc3339 =
   (p $ pp_str @-> ret_get_result pp_result)
 
 let stamp_of_date_time =
-  Ptime.of_date_time $ raw_date_time @-> ret_get_option raw_stamp
+  Ptime.of_date_time $ raw_date_time @-> ret_get_option stamp
 
 let stamp_of_s =
-  let of_posix_s s = Ptime.(of_span (Span.of_s s)) in
-  (of_posix_s $ pp_float @-> ret_get_option raw_stamp)
+  (Ptime.of_float_s $ pp_float @-> ret_get_option stamp)
 
-let stamp_conversions =
+let stamp_conversions = test "Stamp to RFC 3339 conversions" @@ fun () ->
   let dt ?space ?frac ?tz_offset_s dt =
     Ptime.to_rfc3339 ?space ?frac ?tz_offset_s (stamp_of_date_time dt)
   in
   let stamp ?space ?frac ?tz_offset_s s =
     Ptime.to_rfc3339 ?space ?frac ?tz_offset_s s
   in
-  test "Stamp to RFC 3339 conversions" @@ fun () ->
   let dt0 = (1999, 01, 02), ((01, 02, 03), 0) in
   eq_str "1999-01-02T01:02:03Z" (dt dt0);
   eq_str "1999-01-02 01:02:03Z" (dt ~space:true dt0);
@@ -84,7 +82,7 @@ let stamp_conversions =
   app_raises ~pp:pp_str (stamp ~frac:(-1)) Ptime.epoch;
   ()
 
-let parse =
+let parse = test "RFC 3339 to stamp conversions" @@ fun () ->
   let edigit = `Exp_chars ['0'; '1'; '2'; '3'; '4'; '5'; '6'; '7'; '8'; '9'] in
   let etz = `Exp_chars ['+'; '-'; 'Z'; 'z'] in
   let etz_strict = `Exp_chars ['+'; '-'; 'Z'] in
@@ -96,7 +94,6 @@ let parse =
   let err (s,e) err = Error (`RFC3339 ((s, e), err)) in
   let err_pos pos e = err (pos, pos) e in
   let ok s ~tz = Ok (stamp_of_s s, tz) in
-  test "RFC 3339 to stamp conversions" @@ fun () ->
   eq_result (p "1970-01-01T00:00:02.001953125Z")
     (ok ( 2. +. (1. /. (2. ** 9.))) ~tz:0);
   eq_result (p "1969-12-31T23:59:58.001953125Z")
@@ -110,9 +107,12 @@ let parse =
   eq_result (p "1969-12-31 23:59:58.5z") (ok (-1.5) ~tz:0);
   eq_result (p "1969-12-31T23:59:58.5Z") (ok (-1.5) ~tz:0);
   eq_result (p "1969-12-31a23:59:58.5Z") (err_pos 10 edtsep);
-  eq_result (p ~strict:true "1969-12-31 23:59:58.5Z") (err_pos 10 edtsep_strict);
-  eq_result (p ~strict:true "1969-12-31t23:59:58.5Z") (err_pos 10 edtsep_strict);
-  eq_result (p ~strict:true "1969-12-31T23:59:58.5z") (err_pos 21 etz_strict);
+  eq_result (p ~strict:true "1969-12-31 23:59:58.5Z")
+    (err_pos 10 edtsep_strict);
+  eq_result (p ~strict:true "1969-12-31t23:59:58.5Z")
+    (err_pos 10 edtsep_strict);
+  eq_result (p ~strict:true "1969-12-31T23:59:58.5z")
+    (err_pos 21 etz_strict);
   eq_result (p "1970-01-01T00:00:00.5+00:01") (ok (-59.5) ~tz:60);
   eq_result (p "1970-01-01T00:00:00.5+01:01") (ok (-3659.5) ~tz:3660);
   eq_result (p "1970-01-01T00:00:00.5-00:01") (ok (60.5) ~tz:(-60));
@@ -144,29 +144,25 @@ let parse =
   eq_result (p "01-02-29T01:02:03Z") (err_pos 2 edigit);
   ()
 
-let stamp_trips =
-  test "Random stamps to RFC 3339 round trips" @@ fun () ->
+let stamp_trips = test "Random stamps to RFC 3339 round trips" @@ fun () ->
   let stamp_of_posix_s =
-    let of_posix_s s = Ptime.(of_span (Span.of_s s)) in
-    of_posix_s $ pp_float @-> (ret_get_option raw_stamp)
+    Ptime.of_float_s $ pp_float @-> (ret_get_option stamp)
   in
   let trip ?tz_offset_s t =
-    let back = stamp_of_posix_s (floor (Ptime.(Span.to_s (to_span t)))) in
+    let back = stamp_of_posix_s (floor (Ptime.to_float_s t)) in
     let trip, _ = stamp_of_rfc3339 (Ptime.to_rfc3339 ?tz_offset_s t) in
     eq_stamp back trip
   in
   for i = 1 to Test_rand.loop_len () do
-    trip ~tz_offset_s:0 (* UTC *) (Test_rand.stamp ());
-    trip ~tz_offset_s:(Test_rand.tz_offset_s ()) (Test_rand.stamp ())
+    trip ~tz_offset_s:0 (* UTC *) (Test_rand.float_stamp ());
+    trip ~tz_offset_s:(Test_rand.tz_offset_s ()) (Test_rand.float_stamp ())
   done;
   ()
 
-let suite =
-  suite "Ptime RFC 3339 support" @@ fun () ->
-  stamp_conversions ();
-  parse ();
-  stamp_trips ();
-  ()
+let suite = suite "Ptime RFC 3339 support"
+    [ stamp_conversions;
+      parse;
+      stamp_trips ]
 
 (*---------------------------------------------------------------------------
    Copyright (c) 2015 Daniel C. Bünzli.
