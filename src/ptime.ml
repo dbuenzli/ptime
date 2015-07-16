@@ -334,7 +334,7 @@ let to_float_s = Span.to_float_s
 
 let truncate = Span.truncate
 
-let s_frac (sign, _ as t) =
+let frac_s (sign, _ as t) =
   let (_, ps) = if sign < 0 then Span.neg t else t in
   (0, Int64.(rem ps ps_count_in_s))
 

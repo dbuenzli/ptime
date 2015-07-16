@@ -31,6 +31,7 @@ let base = test "Constants and base constructors" @@ fun () ->
   eq_stamp_opt (Ptime.of_float_s nan) None;
   eq_stamp_opt (Ptime.of_float_s infinity) None;
   eq_stamp_opt (Ptime.of_float_s ~-.infinity) None;
+  eq_raw_span Ptime.(Span.to_d_ps (frac_s Ptime.max)) (0, 999_999_999_999L);
   ()
 
 let predicates = test "Predicates" @@ fun () ->
