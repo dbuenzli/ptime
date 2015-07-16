@@ -204,7 +204,7 @@ val truncate : frac_s:int -> t -> t
     @raise Invalid_argument if [frac] is not in the range \[[0];[12]\]. *)
 
 val s_frac : t -> span
-(** [s_frac t] is the fractional second duration in [t]. *)
+(** [s_frac t] is the positive fractional second duration in [t]. *)
 
 (** {1:predicates Predicates} *)
 
