@@ -5,7 +5,7 @@
   ---------------------------------------------------------------------------*)
 
 #install_printer Ptime.pp_top;;
-#install_printer Ptime.pp_span;;
+#install_printer Ptime.Span.pp;;
 
 (*---------------------------------------------------------------------------
    Copyright (c) 2015 Daniel C. Bünzli.
