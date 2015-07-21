@@ -84,6 +84,7 @@ let block f = try f () with
 | Fail | Fail_handled -> ()
 | exn ->
     let bt = Printexc.get_raw_backtrace () in
+    incr fail_count;
     log_unexpected_exn ~header:"BLOCK" exn bt
 
 type test = string * (unit -> unit)
@@ -96,6 +97,7 @@ let run_test (n, f) =
       log ~header:"TEST" "ABORTED: a test failure blew the test scope"
   | exn ->
       let bt = Printexc.get_raw_backtrace () in
+      incr fail_count;
       log_unexpected_exn ~header:"TEST" exn bt
 
 type suite = string * test list
@@ -103,6 +105,7 @@ let suite n ts = n, ts
 let run_suite (n, ts) = try log "%s" n; List.iter run_test ts with
 | exn ->
     let bt = Printexc.get_raw_backtrace () in
+    incr fail_count;
     log_unexpected_exn ~header:"SUITE" exn bt
 
 let run suites = List.iter run_suite suites
