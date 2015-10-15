@@ -10,11 +10,10 @@ human-readable, locale-independent representation.
 
 Ptime is not a calendar library.
 
-Ptime temporarily depends on [Rresult][2] and is distributed under the
-BSD3 license.
+Ptime depends on the `result` compatibility package and is distributed
+under the BSD3 license.
 
 [1]: http://tools.ietf.org/html/rfc3339
-[2]: http://erratique.ch/software/rresult
 
 Home page: http://erratique.ch/software/ptime  
 Contact: Daniel Bünzli `<daniel.buenzl i@erratique.ch>`

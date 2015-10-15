@@ -27,7 +27,7 @@
 
     {e Release %%VERSION%% - %%MAINTAINER%% } *)
 
-open Rresult
+open Result
 
 (** {1:timespans POSIX time spans} *)
 
