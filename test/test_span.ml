@@ -104,8 +104,7 @@ let rounding = test "Rounding" @@ fun () ->
     eq_span (Ptime.Span.truncate ~frac_s:frac (n (3, a))) (n (3, b))
   in
   for i = 0 to 12 do r ~frac:0 0L 0L done;
-  app_raises ~pp:span (Ptime.Span.round ~frac_s:(-1)) (pps 0L);
-  app_raises ~pp:span (Ptime.Span.round ~frac_s:13) (pps 0L);
+  r_carry ~frac:(-1) 86_399_500_000_000_000L;
   r_carry ~frac:0 86_399_500_000_000_000L;
   r       ~frac:0 86_399_499_999_999_999L 86_399_000_000_000_000L;
   r       ~frac:0 10_001_500_000_000_000L 10_002_000_000_000_000L;
@@ -157,7 +156,9 @@ let rounding = test "Rounding" @@ fun () ->
   r       ~frac:12 86_399_999_999_999_999L 86_399_999_999_999_999L;
   r       ~frac:12 10_001_111_111_111_115L 10_001_111_111_111_115L;
   r       ~frac:12 10_001_111_111_111_114L 10_001_111_111_111_114L;
+  r       ~frac:13 10_001_111_111_111_114L 10_001_111_111_111_114L;
   for i = 0 to 12 do t ~frac:0 0L 0L done;
+  t ~frac:(-1) 86_399_999_999_999_999L 86_399_000_000_000_000L;
   t ~frac:0 86_399_999_999_999_999L 86_399_000_000_000_000L;
   t ~frac:1 86_399_999_999_999_999L 86_399_900_000_000_000L;
   t ~frac:2 86_399_999_999_999_999L 86_399_990_000_000_000L;
@@ -171,8 +172,7 @@ let rounding = test "Rounding" @@ fun () ->
   t ~frac:10 86_399_999_999_999_999L 86_399_999_999_999_900L;
   t ~frac:11 86_399_999_999_999_999L 86_399_999_999_999_990L;
   t ~frac:12 86_399_999_999_999_999L 86_399_999_999_999_999L;
-  app_raises ~pp:span (Ptime.Span.truncate ~frac_s:(-1)) (pps 0L);
-  app_raises ~pp:span (Ptime.Span.truncate ~frac_s:13) (pps 0L);
+  t ~frac:13 86_399_999_999_999_999L 86_399_999_999_999_999L;
   ()
 
 let pretty_printing =

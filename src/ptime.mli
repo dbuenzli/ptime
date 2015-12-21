@@ -117,16 +117,14 @@ module Span : sig
   (** {1:rounding Rounding} *)
 
   val round : frac_s:int -> span -> span
-  (** [round ~frac_s t] is [t] rounded to [frac_s]'s decimal
-      fractional second. Ties are rounded away from zero.
-
-      @raise Invalid_argument if [frac] is not in the range \[[0];[12]\]. *)
+  (** [round ~frac_s t] is [t] rounded to the [frac_s] decimal
+      fractional second. Ties are rounded away from zero.  [frac_s] is
+      clipped to the range \[[0];[12]\]. *)
 
   val truncate : frac_s:int -> span -> span
-  (** [truncate ~frac_s t] is [t] truncated to [frac_s] decimal fractional
-      second.
-
-      @raise Invalid_argument if [frac] is not in the range \[[0];[12]\]. *)
+  (** [truncate ~frac_s t] is [t] truncated to the [frac_s] decimal
+      fractional second. [frac_s] is clipped to the range
+      \[[0];[12]\]. *)
 
   (** {1:print Pretty printing} *)
 
@@ -197,14 +195,13 @@ val to_float_s : t -> float
     POSIX span. *)
 
 val truncate : frac_s:int -> t -> t
-(** [truncate ~frac_s t] is [t] truncated to [frac_s] decimal
-    fractional second. Effectively this reduces precision without rounding,
-    the timestamp remains in the second it is in.
-
-    @raise Invalid_argument if [frac] is not in the range \[[0];[12]\]. *)
+(** [truncate ~frac_s t] is [t] truncated to the [frac_s] decimal
+    fractional second. Effectively this reduces precision without
+    rounding, the timestamp remains in the second it is in. [frac_s]
+    is clipped to the range \[[0];[12]\]. *)
 
 val frac_s : t -> span
-(** [frac_s t] is the positive fractional second duration in [t]. *)
+(** [frac_s t] is the (positive) fractional second duration in [t]. *)
 
 (** {1:predicates Predicates} *)
 
@@ -404,9 +401,9 @@ val of_rfc3339 : ?strict:bool -> ?sub:bool -> ?start:int -> string ->
        {!of_date_time}}
     {- Fractional parts beyond the picosecond ([1e-12]) are truncated.}} *)
 
-val to_rfc3339 : ?space:bool -> ?frac:int -> ?tz_offset_s:tz_offset_s ->
+val to_rfc3339 : ?space:bool -> ?frac_s:int -> ?tz_offset_s:tz_offset_s ->
   t -> string
-(** [to_rfc3339_tz ~space ~frac ~tz_offset_s t] formats the timestamp
+(** [to_rfc3339_tz ~space ~frac_s ~tz_offset_s t] formats the timestamp
     [t] according to a RFC 3339
     {{:https://tools.ietf.org/html/rfc3339#section-5.6}[date-time]}
     production with:
@@ -420,18 +417,16 @@ val to_rfc3339 : ?space:bool -> ?frac:int -> ?tz_offset_s:tz_offset_s ->
        the
        {{:https://tools.ietf.org/html/rfc3339#section-4.3}unknown local offset
        convention} is used to render the timezone component.}
-    {- [frac] in the range \[[0];[12]\] specifies that exactly
-       [frac]th decimal digits of the fractional second of [t] are
+    {- [frac_s], clipped to the range \[[0];[12]\] specifies that exactly
+       [frac_s] decimal digits of the fractional second of [t] are
        rendered (defaults to [0]).}
     {- [space] if [true] the date and time separator is a space
-       rather than a ['T'] (not recommended, defaults to [false]).}}
+       rather than a ['T'] (not recommended, defaults to [false]).}} *)
 
-    @raise Invalid_argument if [frac] is not in the range \[[0];[12]\] *)
-
-val pp_rfc3339 : ?space:bool -> ?frac:int -> ?tz_offset_s:tz_offset_s ->
+val pp_rfc3339 : ?space:bool -> ?frac_s:int -> ?tz_offset_s:tz_offset_s ->
   unit -> Format.formatter -> t -> unit
-(** [pp_rfc3339 ?space ?frac ?tz_offset_s () ppf t] is [Format.fprintf ppf "%s"
-    (to_rfc3339 ?space ?frac ?tz_offset_s t)]. *)
+(** [pp_rfc3339 ?space ?frac_s ?tz_offset_s () ppf t] is
+    [Format.fprintf ppf "%s" (to_rfc3339 ?space ?frac_s ?tz_offset_s t)]. *)
 
 (** {1:print Pretty printing} *)
 
@@ -439,9 +434,9 @@ val pp_raw : Format.formatter -> t -> unit
 (** [pp_raw ppf t] prints an unspecified raw representation of [t]
      on [ppf]. *)
 
-val pp : ?frac:int -> ?tz_offset_s:tz_offset_s -> unit -> Format.formatter ->
+val pp : ?frac_s:int -> ?tz_offset_s:tz_offset_s -> unit -> Format.formatter ->
   t -> unit
-(** [pp ~frac ~tz_offset_s () ppf t] prints an unspecified, human readable,
+(** [pp ~frac_s ~tz_offset_s () ppf t] prints an unspecified, human readable,
     locale-independent, representation of [t] with:
     {ul
     {- [tz_offset_s] hints the timezone offset to use (defaults to
@@ -449,11 +444,9 @@ val pp : ?frac:int -> ?tz_offset_s:tz_offset_s -> unit -> Format.formatter ->
        following cases: if [tz_offset_s] is not an integral number of
        minutes and its magnitude not in the range permitted by the
        standard, if [add_span t (Span.of_int_s tz_offset_s)] is [None].}
-    {- [frac] in the the range \[[0];[12]\] specifies that exactly
-       [frac]th decimal digits of the fractional second of [t] are
+    {- [frac_s] clipped to the range \[[0];[12]\] specifies that exactly
+       [frac_s] decimal digits of the fractional second of [t] are
        rendered (defaults to [0]).}}
-
-    @raise Invalid_argument if [frac] is not in the range \[[0];[12]\].
 
     {b Note.} The output of this function is similar to but {b not}
     compliant with RFC 3339, it should only be used for presentation,

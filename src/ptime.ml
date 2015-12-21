@@ -13,9 +13,6 @@ let strf = Format.asprintf
 let err_span_d_ps d ps ps_max =
   strf "picosecond count of (%d,%Ld) not in range [0;%Ld]" d ps ps_max
 
-let err_frac_range min max f =
-  strf "frac %d is not in range [%d;%d]" f min max
-
 (* Julian day and proleptic Gregorian calendar date conversion.
 
    Formulae are from the calendar FAQ:
@@ -190,14 +187,14 @@ module Span = struct
                                     1L; |]
 
   let round ~frac_s:frac (sign, _ as t) =
-    if frac < 0 || frac > 12 then invalid_arg (err_frac_range 0 12 frac) else
+    let frac = if frac < 0 then 0 else (if frac > 12 then 12 else frac) in
     let (d, ps) = if sign < 0 then neg t else t in
     let rps = Int64.mul (round_div ps frac_div.(frac)) frac_div.(frac) in
     let t = if rps > ps_day_max then (d + 1, 0L) else (d, rps) in
     if sign < 0 then neg t else t
 
   let truncate ~frac_s:frac (sign, _ as t) =
-    if frac < 0 || frac > 12 then invalid_arg (err_frac_range 0 12 frac) else
+    let frac = if frac < 0 then 0 else (if frac > 12 then 12 else frac) in
     let (d, ps) = if sign < 0 then neg t else t in
     let tps = Int64.(sub ps (rem ps frac_div.(frac))) in
     if sign < 0 then neg (d, tps) else (d, tps)
@@ -612,10 +609,9 @@ let rfc3339_adjust_tz_offset tz_offset_s =
   else 0 (* UTC *), true
 
 let s_frac_of_ps frac ps =
-  if frac < 0 || frac > 12 then invalid_arg (err_frac_range 0 12 frac) else
   Int64.(div (rem ps ps_count_in_s) Span.frac_div.(frac))
 
-let to_rfc3339 ?(space = false) ?(frac = 0) ?tz_offset_s (_, ps as t) =
+let to_rfc3339 ?(space = false) ?frac_s:(frac = 0) ?tz_offset_s (_, ps as t) =
   let buf = Buffer.create 255 in
   let tz_offset_s, tz_unknown = match tz_offset_s with
   | Some tz -> rfc3339_adjust_tz_offset tz
@@ -624,6 +620,7 @@ let to_rfc3339 ?(space = false) ?(frac = 0) ?tz_offset_s (_, ps as t) =
   let (y, m, d), ((hh, ss, mm), tz_offset_s) = to_date_time ~tz_offset_s t in
   let dt_sep = if space then ' ' else 'T' in
   Printf.bprintf buf "%04d-%02d-%02d%c%02d:%02d:%02d" y m d dt_sep hh ss mm;
+  let frac = if frac < 0 then 0 else (if frac > 12 then 12 else frac) in
   if frac <> 0 then Printf.bprintf buf ".%0*Ld" frac (s_frac_of_ps frac ps);
   if tz_offset_s = 0 && not tz_unknown then Printf.bprintf buf "Z" else
   begin
@@ -635,16 +632,17 @@ let to_rfc3339 ?(space = false) ?(frac = 0) ?tz_offset_s (_, ps as t) =
   end;
   Buffer.contents buf
 
-let pp_rfc3339 ?space ?frac ?tz_offset_s () ppf t =
-  Format.fprintf ppf "%s" (to_rfc3339 ?space ?frac ?tz_offset_s t)
+let pp_rfc3339 ?space ?frac_s ?tz_offset_s () ppf t =
+  Format.fprintf ppf "%s" (to_rfc3339 ?space ?frac_s ?tz_offset_s t)
 
 (* Pretty printing *)
 
 let pp_raw = Span.pp_raw
-let pp ?(frac = 0) ?(tz_offset_s = 0) () ppf (_, ps as t) =
+let pp ?frac_s:(frac = 0) ?(tz_offset_s = 0) () ppf (_, ps as t) =
   let tz_offset_s, tz_unknown = rfc3339_adjust_tz_offset tz_offset_s in
   let (y, m, d), ((hh, ss, mm), tz_offset_s) = to_date_time ~tz_offset_s t in
   Format.fprintf ppf "%04d-%02d-%02d %02d:%02d:%02d" y m d hh ss mm;
+  let frac = if frac < 0 then 0 else (if frac > 12 then 12 else frac) in
   if frac <> 0 then Format.fprintf ppf ".%0*Ld" frac (s_frac_of_ps frac ps);
   let tz_sign = if tz_offset_s < 0 || tz_unknown then '-' else '+' in
   let tz_min = abs (tz_offset_s / 60) in
