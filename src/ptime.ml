@@ -164,7 +164,10 @@ module Span = struct
 
   (* Predicates *)
 
-  let equal s0 s1 = s0 = s1
+  let equal (d0, ps0) (d1, ps1) =
+    (Pervasives.compare : int -> int -> int) d0 d1 = 0 &&
+    Int64.compare ps0 ps1 = 0
+
   let compare (d0, ps0) (d1, ps1) =
     let c = Pervasives.compare d0 d1 in
     if c <> 0 then c else Pervasives.compare ps0 ps1
