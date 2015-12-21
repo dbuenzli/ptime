@@ -243,9 +243,7 @@ val diff : t -> t -> span
 
 type tz_offset_s = int
 (** The type for time zone offsets between local and UTC timelines
-    in seconds.
-
-    This is the signed difference in seconds between the local
+    in seconds. This is the signed difference in seconds between the local
     timeline and the UTC timeline:
 {[
     tz_offset_s = local - UTC
@@ -376,8 +374,8 @@ val of_rfc3339 : ?strict:bool -> ?sub:bool -> ?start:int -> string ->
     {- [t] the POSIX timestamp (hence on the UTC timeline).}
     {- [tz], the optional {{!tz_offset_s}timezone offset} found in the
        timestamp. [None] is returned iff the date-time satisfies the
-       the {{:https://tools.ietf.org/html/rfc3339#section-4.3}unknown local
-       offset convention}}
+       {{:https://tools.ietf.org/html/rfc3339#section-4.3}unknown local
+       offset convention}.}
     {- [count] the number of bytes read starting at [start] to parse the
        timestamp. If [sub] is [false] (default) this is always
        [String.length s - start] and [Error `Trailing_input] is returned
@@ -421,7 +419,8 @@ val to_rfc3339 : ?space:bool -> ?frac_s:int -> ?tz_offset_s:tz_offset_s ->
        [frac_s] decimal digits of the fractional second of [t] are
        rendered (defaults to [0]).}
     {- [space] if [true] the date and time separator is a space
-       rather than a ['T'] (not recommended, defaults to [false]).}} *)
+       rather than a ['T'] (not recommended but may be allowed by the
+       protocol you are dealing with, defaults to [false]).}} *)
 
 val pp_rfc3339 : ?space:bool -> ?frac_s:int -> ?tz_offset_s:tz_offset_s ->
   unit -> Format.formatter -> t -> unit
