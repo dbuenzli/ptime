@@ -1,4 +1,4 @@
-<**/*.{ml,mli}> : bin_annot, debug, safe_string, package(result)
+<**/*.{ml,mli}> : bin_annot, safe_string, package(result)
 
 <src> : include
 <src/ptime_top*> : package(compiler-libs.toplevel)
