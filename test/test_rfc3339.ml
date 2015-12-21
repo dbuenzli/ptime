@@ -4,7 +4,7 @@
    %%NAME%% release %%VERSION%%
   ---------------------------------------------------------------------------*)
 
-open Rresult
+open Result
 open Testing
 open Testing_ptime
 
@@ -13,12 +13,18 @@ let pp_result ppf r =
   let pp_error ppf = function `RFC3339 ((s, e), err) ->
     Format.fprintf ppf "@[<1>%d-%d:@ @[%a@]@]" s e Ptime.pp_rfc3339_error err
   in
-  R.pp ~pp_ok ~pp_error ppf r
+  match r with
+  | Ok v -> Format.fprintf ppf "@[Ok %a@]" pp_ok v
+  | Error e -> Format.fprintf ppf "@[Error %a@]" pp_error e
 
 let eq_result =
   let ok (t, tz) (t', tz') = Ptime.equal t t' && tz = tz' in
-  let error = ( = ) in
-  eq ~eq:(R.equal ~ok ~error) ~pp:pp_result
+  let r_equal r r' = match r, r' with
+  | Ok v, Ok v' -> ok v v'
+  | Error e, Error e' -> e = e'
+  | _ -> false
+  in
+  eq ~eq:r_equal ~pp:pp_result
 
 let stamp_of_rfc3339 =
   let p s = Ptime.of_rfc3339 s in

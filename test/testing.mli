@@ -4,7 +4,7 @@
    %%NAME%% release %%VERSION%%
   ---------------------------------------------------------------------------*)
 
-open Rresult
+open Result
 
 (* {1 Value equality and pretty printing} *)
 
