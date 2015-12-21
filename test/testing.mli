@@ -16,6 +16,7 @@ type 'a pp = Format.formatter -> 'a -> unit
 val pp_int : int pp
 val pp_float : float pp
 val pp_str : string pp
+val pp_opt : pp_v:'a pp -> 'a option pp
 
 (* {1 Logging} *)
 

@@ -347,7 +347,7 @@ val to_date : t -> date
 (** {1:rfc3339 RFC 3339 timestamp conversions} *)
 
 type error_range = int * int
-(** The type for error ranges, starting and ending index in a string. *)
+(** The type for error ranges, starting and ending position. *)
 
 type rfc3339_error =
   [ `Invalid_stamp
@@ -368,30 +368,32 @@ val rfc3339_error_to_msg : ('a, [`RFC3339 of error_range * rfc3339_error])
 (** [rfc3339_error_to_msg r] converts RFC 3339 parse errors to error
     messages. *)
 
-val of_rfc3339 : ?last:int ref -> ?strict:bool -> ?pos:int -> ?len:int ->
-  string ->
-  ((t * tz_offset_s), [> `RFC3339 of error_range * rfc3339_error]) result
-(** [of_rfc3339 ~pos ~len s] parses a RFC 3339
+val of_rfc3339 : ?strict:bool -> ?sub:bool -> ?start:int -> string ->
+  ((t * tz_offset_s option * int),
+   [> `RFC3339 of error_range * rfc3339_error]) result
+(** [of_rfc3339 ~strict ~sub ~start s] parses an RFC 3339
     {{:https://tools.ietf.org/html/rfc3339#section-5.6}[date-time]}
-    production in the range \[[pos];[pos+len]\] of [s] to a pair
-    [(t, tz)] with:
+    starting at [start] (defaults to [0]) in [s] to a triple [(t, tz, count)]
+    with:
     {ul
     {- [t] the POSIX timestamp (hence on the UTC timeline).}
-    {- [tz], the {{!tz_offset_s}timezone offset} found in the timestamp.}}
-
-    [last], if provided the parsing doesn't fail with
-    [`Trailing_input] if the input range is not exhausted, it stops
-    and the end position of the timestamp is written to [last]. [pos]
-    defaults to [0] and [len] to [String.length s]. If [strict] is
-    [true] (defaults to [false]) the parsing function errors on
-    timestamps with lowercase ['T'] or ['Z'] characters or space
-    separated date and times.
-
-    @raise Invalid_argument if the range of integers \[[pos];[pos+len]\] are
-    not indexes of [s].
+    {- [tz], the optional {{!tz_offset_s}timezone offset} found in the
+       timestamp. [None] is returned iff the date-time satisfies the
+       the {{:https://tools.ietf.org/html/rfc3339#section-4.3}unknown local
+       offset convention}}
+    {- [count] the number of bytes read starting at [start] to parse the
+       timestamp. If [sub] is [false] (default) this is always
+       [String.length s - start] and [Error `Trailing_input] is returned
+       if there are still bytes in [s] after the date-time was parsed. Use
+       [~sub:true] for allowing trailing input to exist.}}
+    If [strict] is [true] (defaults to [false]) the parsing function
+    errors on timestamps with lowercase ['T'] or ['Z'] characters or
+    space separated date and times.
 
     {b Notes and limitations.}
     {ul
+    {- If [start] is not an index of [s], [Error ((start, start), `Eoi)] is
+       returned.}
     {- RFC 3339 allows a few degenerate (I say) timestamps with
        non-zero time zone offsets to be parsed at the boundaries that
        correspond to timestamps that cannot be expressed in UTC in RFC

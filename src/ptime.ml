@@ -13,9 +13,6 @@ let strf = Format.asprintf
 let err_span_d_ps d ps ps_max =
   strf "picosecond count of (%d,%Ld) not in range [0;%Ld]" d ps ps_max
 
-let err_sub ~pos ~len ~slen =
-  strf "invalid substring pos:%d len:%d string length:%d" pos len slen
-
 let err_frac_range min max f =
   strf "frac %d is not in range [%d;%d]" f min max
 
@@ -538,26 +535,29 @@ let parse_tz_s ~strict pos max s =
     let mm = parse_digits ~count:2 mm_pos max s in
     if hh > 23 then error (hh_pos, hh_pos + 1) `Invalid_stamp else
     if mm > 59 then error (mm_pos, mm_pos + 1) `Invalid_stamp else
-    sign * (hh * 3600 + mm * 60), mm_pos + 1
+    let secs = hh * 3600 + mm * 60 in
+    let tz_s = match secs = 0 && sign = -1 with
+    | true -> None (* -00:00 convention *)
+    | false -> Some (sign * secs)
+    in
+    tz_s, mm_pos + 1
   in
   if pos > max then error_pos max `Eoi else
   match s.[pos] with
-  | 'Z' -> 0, pos
-  | 'z' when not strict -> 0, pos
+  | 'Z' -> Some 0, pos
+  | 'z' when not strict -> Some 0, pos
   | '+' -> parse_tz_mag ( 1) (pos + 1)
   | '-' -> parse_tz_mag (-1) (pos + 1)
   | c ->
       let chars = ['+'; '-'; 'Z'] @ if strict then [] else ['z'] in
       error_pos pos (`Exp_chars chars)
 
-let of_rfc3339 ?last ?(strict = false) ?(pos = 0) ?len s =
+let of_rfc3339 ?(strict = false) ?(sub = false) ?(start = 0) s =
   try
-    let slen = String.length s in
-    let max = match len with None -> slen - 1 | Some l -> pos + l - 1 in
-    if pos < 0 || max >= slen
-    then invalid_arg (err_sub ~pos ~len:(max + 1) ~slen)
-    else
-    let y_pos = pos in
+    let s_len = String.length s in
+    let max = s_len - 1 in
+    if s_len = 0 || start < 0 || start > max then error_pos start `Eoi else
+    let y_pos = start in
     let m_pos = y_pos + 5 in
     let d_pos = m_pos + 3 in
     let hh_pos = d_pos + 3 in
@@ -579,24 +579,21 @@ let of_rfc3339 ?last ?(strict = false) ?(pos = 0) ?len s =
     | `Frac -> parse_frac_ps (decide_pos + 1) max s
     | `Tz -> None, decide_pos
     in
-    let tz_s, last_pos = parse_tz_s ~strict tz_pos max s in
+    let tz_s_opt, last_pos = parse_tz_s ~strict tz_pos max s in
+    let tz_s = match tz_s_opt with None -> 0 | Some s -> s in
     match of_date_time ((y, m, d), ((hh, mm, ss), tz_s)) with
-    | None -> error (pos, last_pos) `Invalid_stamp
+    | None -> error (start, last_pos) `Invalid_stamp
     | Some t ->
-        let r = match frac with
+        let t, tz_s = match frac with
         | None | Some 0L -> t, tz_s
         | Some frac ->
             match add_span t (0, frac) with
-            | None -> error (pos, last_pos) `Invalid_stamp
+            | None -> error (start, last_pos) `Invalid_stamp
             | Some t -> t, tz_s
         in
-        begin match last with
-        | None ->
-            if last_pos = max then Ok r else
-            error_pos (last_pos + 1) `Trailing_input
-        | Some last ->
-            last := last_pos; Ok r
-        end
+        if not sub && last_pos <> max
+        then error_pos (last_pos + 1) `Trailing_input
+        else Ok (t, tz_s_opt, last_pos - start + 1)
   with RFC3339 (r, e) -> Error (`RFC3339 (r, e))
 
 (* RFC 3339 timestamp formatter *)
