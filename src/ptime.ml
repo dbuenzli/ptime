@@ -201,7 +201,7 @@ module Span = struct
 
   (* Pretty printing *)
 
-  let pp_raw ppf (d, ps) = Format.fprintf ppf "@[<1>(%d,@,%Ld)@]" d ps
+  let dump ppf (d, ps) = Format.fprintf ppf "@[<1>(%d,@,%Ld)@]" d ps
 
   (* Warning laborious code follows. Is there a better way ? *)
 
@@ -637,8 +637,7 @@ let pp_rfc3339 ?space ?frac_s ?tz_offset_s () ppf t =
 
 (* Pretty printing *)
 
-let pp_raw = Span.pp_raw
-let pp ?frac_s:(frac = 0) ?(tz_offset_s = 0) () ppf (_, ps as t) =
+let pp_human ?frac_s:(frac = 0) ?(tz_offset_s = 0) () ppf (_, ps as t) =
   let tz_offset_s, tz_unknown = rfc3339_adjust_tz_offset tz_offset_s in
   let (y, m, d), ((hh, ss, mm), tz_offset_s) = to_date_time ~tz_offset_s t in
   Format.fprintf ppf "%04d-%02d-%02d %02d:%02d:%02d" y m d hh ss mm;
@@ -651,7 +650,8 @@ let pp ?frac_s:(frac = 0) ?(tz_offset_s = 0) () ppf (_, ps as t) =
   Format.fprintf ppf " %c%02d:%02d" tz_sign tz_hh tz_mm;
   ()
 
-let pp_top = pp ~tz_offset_s:0 ()
+let pp = pp_human ~tz_offset_s:0 ()
+let dump = Span.dump
 
 (*---------------------------------------------------------------------------
    Copyright (c) 2015 Daniel C. Bünzli.

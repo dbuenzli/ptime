@@ -4,7 +4,7 @@
    %%NAME%% release %%VERSION%%
   ---------------------------------------------------------------------------*)
 
-#install_printer Ptime.pp_top;;
+#install_printer Ptime.pp;;
 #install_printer Ptime.Span.pp;;
 
 (*---------------------------------------------------------------------------

@@ -128,12 +128,8 @@ module Span : sig
 
   (** {1:print Pretty printing} *)
 
-  val pp_raw : Format.formatter -> span -> unit
-  (** [pp_raw ppf s] prints an unspecified raw representation of [d]
-      on [ppf]. *)
-
   val pp : Format.formatter -> span -> unit
-  (** [pp_span ppf d] prints an unspecified representation of [d] on
+  (** [pp ppf d] prints an unspecified representation of [d] on
       [ppf].  The representation is not fixed-width, depends on the
       magnitude of [d] and uses locale independent
       {{:http://www.bipm.org/en/publications/si-brochure/chapter3.html}SI
@@ -147,6 +143,10 @@ module Span : sig
       {b Warning} Becomes unprecise (but does not overflow) if the
       absolute number of POSIX days in the time span is greater than [max_int /
       4] (on 32-bit platforms this is ~735'439 years) *)
+
+  val dump : Format.formatter -> span -> unit
+  (** [dump ppf s] prints an unspecified raw representation of [d]
+      on [ppf]. *)
 end
 
 (** {1:timestamps POSIX timestamps} *)
@@ -429,14 +429,10 @@ val pp_rfc3339 : ?space:bool -> ?frac_s:int -> ?tz_offset_s:tz_offset_s ->
 
 (** {1:print Pretty printing} *)
 
-val pp_raw : Format.formatter -> t -> unit
-(** [pp_raw ppf t] prints an unspecified raw representation of [t]
-     on [ppf]. *)
-
-val pp : ?frac_s:int -> ?tz_offset_s:tz_offset_s -> unit -> Format.formatter ->
-  t -> unit
-(** [pp ~frac_s ~tz_offset_s () ppf t] prints an unspecified, human readable,
-    locale-independent, representation of [t] with:
+val pp_human : ?frac_s:int -> ?tz_offset_s:tz_offset_s -> unit ->
+  Format.formatter -> t -> unit
+(** [pp_human ~frac_s ~tz_offset_s () ppf t] prints an unspecified, human
+    readable, locale-independent, representation of [t] with:
     {ul
     {- [tz_offset_s] hints the timezone offset to use (defaults to
        [0], i.e.  UTC). The hint is ignored and [0] is used in the
@@ -450,9 +446,14 @@ val pp : ?frac_s:int -> ?tz_offset_s:tz_offset_s -> unit -> Format.formatter ->
     {b Note.} The output of this function is similar to but {b not}
     compliant with RFC 3339, it should only be used for presentation,
     not as a serialization format. *)
-(**/**)
-val pp_top : Format.formatter -> t -> unit
-(**/**)
+
+val pp : Format.formatter -> t -> unit
+(** [pp] is [pp_human ~tz_offset_s:0]. *)
+
+val dump : Format.formatter -> t -> unit
+(** [dump ppf t] prints an unspecified raw representation of [t]
+     on [ppf]. *)
+
 (** {1:basics Basics}
 
     POSIX time counts {{!posix_seconds}POSIX seconds} since the epoch

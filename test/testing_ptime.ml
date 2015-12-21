@@ -15,13 +15,13 @@ let int64 ppf i = Format.fprintf ppf "%Ld" i
 let raw_span ppf (d, ps) = Format.fprintf ppf "@[<1>(%d,@ %Ld)@]" d ps
 let eq_raw_span = eq ~eq:(=) ~pp:raw_span
 
-let span = Ptime.Span.pp_raw
+let span = Ptime.Span.dump
 let eq_span = eq ~eq:Ptime.Span.equal ~pp:span
 let eq_span_opt = eq_option ~eq:Ptime.Span.equal ~pp:span
 
 (* Timestamps *)
 
-let stamp = Ptime.pp_raw
+let stamp = Ptime.dump
 let eq_stamp = eq ~eq:Ptime.equal ~pp:stamp
 let eq_stamp_opt = eq_option ~eq:Ptime.equal ~pp:stamp
 
