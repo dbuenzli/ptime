@@ -319,11 +319,12 @@ val to_date_time : ?tz_offset_s:int -> t -> date * time
     honoured and fallbacks to [0] in case the resulting date-time
     rendering of the timestamp would yield an {{!date}invalid
     date}. This means that you should always interpret the resulting
-    time component with the time zone offset it is paired with and not
-    assume it will be the one you gave to the function. Note that for
-    real-world time zone offsets the fallback to [0] will only happen
-    around {!Ptime.min} and {!Ptime.max}.  Formally the fallback
-    occurs whenever [add_span t (Span.of_int_s tz_offset_s)] is [None].
+    time component with the time zone offset it is paired with in the
+    result and not assume it will be the one you gave to the
+    function. Note that for real-world time zone offsets the fallback
+    to [0] will only happen around {!Ptime.min} and {!Ptime.max}.
+    Formally the fallback occurs whenever [add_span t (Span.of_int_s
+    tz_offset_s)] is [None].
 
     {b Leap seconds.} No POSIX timestamp can represent a date-time
     with a leap second added, hence this function will never return a
@@ -371,7 +372,7 @@ val of_rfc3339 : ?last:int ref -> ?strict:bool -> ?pos:int -> ?len:int ->
   ((t * tz_offset_s), [> `RFC3339 of error_range * rfc3339_error]) result
 (** [of_rfc3339 ~pos ~len s] parses a RFC 3339
     {{:https://tools.ietf.org/html/rfc3339#section-5.6}[date-time]}
-    production in the range [(pos, pos + len]) of [s] to a pair
+    production in the range \[[pos];[pos+len]\] of [s] to a pair
     [(t, tz)] with:
     {ul
     {- [t] the POSIX timestamp (hence on the UTC timeline).}
@@ -385,8 +386,8 @@ val of_rfc3339 : ?last:int ref -> ?strict:bool -> ?pos:int -> ?len:int ->
     timestamps with lowercase ['T'] or ['Z'] characters or space
     separated date and times.
 
-    @raise Invalid_argument if [pos] and [len] do not designate
-    a {{!String}valid substring} of [s].
+    @raise Invalid_argument if the range of integers \[[pos];[pos+len]\] are
+    not indexes of [s].
 
     {b Notes and limitations.}
     {ul
@@ -451,11 +452,9 @@ val pp : ?frac:int -> ?tz_offset_s:tz_offset_s -> unit -> Format.formatter ->
     {b Note.} The output of this function is similar to but {b not}
     compliant with RFC 3339, it should only be used for presentation,
     not as a serialization format. *)
-
 (**/**)
 val pp_top : Format.formatter -> t -> unit
 (**/**)
-
 (** {1:basics Basics}
 
     POSIX time counts {{!posix_seconds}POSIX seconds} since the epoch
