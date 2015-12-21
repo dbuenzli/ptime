@@ -70,7 +70,7 @@ let jd_ptime_max = 5_373_484                  (* the Julian day of Ptime.max *)
    towards zero, *not* towards infinity:
 
 
-         (d * 86_400e12) (s * 86_400e12 + ps)       0
+         (d * 86_400e12) (d * 86_400e12 + ps)       0
      ... -----+-----------------+-------------------+--------- ...
               [---------------->|
                    ps
