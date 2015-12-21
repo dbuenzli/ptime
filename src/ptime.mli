@@ -250,13 +250,14 @@ type tz_offset_s = int
 
     This is the signed difference in seconds between the local
     timeline and the UTC timeline:
+{[
+    tz_offset_s = local - UTC
+]}
     {ul
     {- A value of [-3600] means that the local timeline is sixty minutes
-       {e behind} the UTC timeline. We need to add 3600 seconds to the
-       local timeline to get on the UTC timeline.}
+       {e behind} the UTC timeline.}
     {- A value of [3600] means that the local timeline is sixty
-       minutes {e ahead} the UTC timeline. We need to subtract 3600 seconds
-       to the local timeline to get on the UTC timeline.}} *)
+       minutes {e ahead} the UTC timeline.}} *)
 
 (** {1:date_time Date-time value conversions}
 
