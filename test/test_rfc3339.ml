@@ -44,46 +44,50 @@ let stamp_conversions = test "Stamp to RFC 3339 conversions" @@ fun () ->
     Ptime.to_rfc3339 ?space ?frac ?tz_offset_s s
   in
   let dt0 = (1999, 01, 02), ((01, 02, 03), 0) in
-  eq_str "1999-01-02T01:02:03Z" (dt dt0);
-  eq_str "1999-01-02 01:02:03Z" (dt ~space:true dt0);
+  eq_str "1999-01-02T01:02:03Z" (dt ~tz_offset_s:0 dt0);
+  eq_str "1999-01-02 01:02:03Z" (dt ~tz_offset_s:0 ~space:true dt0);
+  eq_str "1999-01-02T01:02:03-00:00" (dt dt0);
+  eq_str "1999-01-02 01:02:03-00:00" (dt ~space:true dt0);
   eq_str "1999-01-02T02:03:03+01:01" (dt ~tz_offset_s:3660 dt0);
   eq_str "1999-01-02T00:01:03-01:01" (dt ~tz_offset_s:(-3660) dt0);
-  eq_str "1999-01-02T01:02:03Z" (dt ~tz_offset_s:1 dt0);
-  eq_str "1999-01-02T01:02:03Z" (dt ~tz_offset_s:12960000 dt0);
+  eq_str "1999-01-02T01:02:03-00:00" (dt ~tz_offset_s:1 dt0);
+  eq_str "1999-01-02T01:02:03-00:00" (dt ~tz_offset_s:12960000 dt0);
   eq_str "1969-12-31T23:59:59.75Z"
-    (stamp ~frac:2 (stamp_of_s (-.(1. /. 4.))));
+    (stamp ~frac:2 ~tz_offset_s:0 (stamp_of_s (-.(1. /. 4.))));
   eq_str "1969-12-31T23:59:59.25Z"
-    (stamp ~frac:2 (stamp_of_s (-1. +. (1. /. 4.))));
+    (stamp ~frac:2 ~tz_offset_s:0 (stamp_of_s (-1. +. (1. /. 4.))));
   eq_str "1970-01-01T00:00:01.001953125Z"
-    (stamp ~frac:9 (stamp_of_s ( 1. +. (1. /. (2. ** 9.)))));
+    (stamp ~frac:9 ~tz_offset_s:0 (stamp_of_s ( 1. +. (1. /. (2. ** 9.)))));
   eq_str "1969-12-31T23:59:59.001953125Z"
-    (stamp ~frac:9 (stamp_of_s (-1. +. (1. /. (2. ** 9.)))));
+    (stamp ~frac:9 ~tz_offset_s:0 (stamp_of_s (-1. +. (1. /. (2. ** 9.)))));
   eq_str "1970-01-01T00:00:01.125Z"
-    (stamp ~frac:3 (stamp_of_s ( 1. +. (1. /. (2. ** 3.)))));
+    (stamp ~frac:3 ~tz_offset_s:0 (stamp_of_s ( 1. +. (1. /. (2. ** 3.)))));
   eq_str "1969-12-31T23:59:59.125Z"
-    (stamp ~frac:3 (stamp_of_s (-1. +. (1. /. (2. ** 3.)))));
+    (stamp ~frac:3 ~tz_offset_s:0 (stamp_of_s (-1. +. (1. /. (2. ** 3.)))));
   eq_str "1970-01-01T00:00:01.5Z"
-    (stamp ~frac:1 (stamp_of_s ( 1. +. (1. /. (2. ** 1.)))));
+    (stamp ~frac:1 ~tz_offset_s:0 (stamp_of_s ( 1. +. (1. /. (2. ** 1.)))));
   eq_str "1969-12-31T23:59:59.5Z"
-    (stamp ~frac:1 (stamp_of_s (-1. +. (1. /. (2. ** 1.)))));
+    (stamp ~frac:1 ~tz_offset_s:0 (stamp_of_s (-1. +. (1. /. (2. ** 1.)))));
   eq_str "1970-01-01T00:00:02.001953125Z"
-    (stamp ~frac:9 (stamp_of_s ( 2. +. (1. /. (2. ** 9.)))));
+    (stamp ~frac:9 ~tz_offset_s:0 (stamp_of_s ( 2. +. (1. /. (2. ** 9.)))));
   eq_str "1969-12-31T23:59:58.001953125Z"
-    (stamp ~frac:9 (stamp_of_s (-2. +. (1. /. (2. ** 9.)))));
+    (stamp ~frac:9 ~tz_offset_s:0 (stamp_of_s (-2. +. (1. /. (2. ** 9.)))));
   eq_str "1970-01-01T00:00:02.000000000Z"
-    (stamp ~frac:9 (stamp_of_s ( 2.)));
+    (stamp ~frac:9 ~tz_offset_s:0 (stamp_of_s ( 2.)));
   eq_str "1969-12-31T23:59:58.000000000Z"
-    (stamp ~frac:9 (stamp_of_s (-2.)));
+    (stamp ~frac:9 ~tz_offset_s:0 (stamp_of_s (-2.)));
   eq_str "1970-01-01T00:00:02.0Z"
-    (stamp ~frac:1 (stamp_of_s ( 2.)));
+    (stamp ~frac:1 ~tz_offset_s:0 (stamp_of_s ( 2.)));
   eq_str "1969-12-31T23:59:58.0Z"
-    (stamp ~frac:1 (stamp_of_s (-2.)));
+    (stamp ~frac:1 ~tz_offset_s:0 (stamp_of_s (-2.)));
   eq_str "1970-01-01T00:00:02Z"
-    (stamp ~frac:0 (stamp_of_s ( 2.)));
+    (stamp ~frac:0 ~tz_offset_s:0 (stamp_of_s ( 2.)));
   eq_str "1969-12-31T23:59:58Z"
-    (stamp ~frac:0 (stamp_of_s (-2.)));
-  eq_str "9999-12-31T23:59:59.999999999999Z" (stamp ~frac:12 Ptime.max);
-  eq_str "0000-01-01T00:00:00.000000000000Z" (stamp ~frac:12 Ptime.min);
+    (stamp ~frac:0 ~tz_offset_s:0 (stamp_of_s (-2.)));
+  eq_str "9999-12-31T23:59:59.999999999999Z"
+    (stamp ~frac:12 ~tz_offset_s:0 Ptime.max);
+  eq_str "0000-01-01T00:00:00.000000000000Z"
+    (stamp ~frac:12 ~tz_offset_s:0 Ptime.min);
   app_raises ~pp:pp_str (stamp ~frac:13) Ptime.epoch;
   app_raises ~pp:pp_str (stamp ~frac:(-1)) Ptime.epoch;
   ()

@@ -611,23 +611,26 @@ let rfc3339_adjust_tz_offset tz_offset_s =
   let min = -86340 (* -23h59 in secs *) in
   let max = +86340 (* +23h59 in secs *) in
   if min <= tz_offset_s && tz_offset_s <= max && tz_offset_s mod 60 = 0
-  then tz_offset_s
-  else 0 (* UTC *)
+  then tz_offset_s, false
+  else 0 (* UTC *), true
 
 let s_frac_of_ps frac ps =
   if frac < 0 || frac > 12 then invalid_arg (err_frac_range 0 12 frac) else
   Int64.(div (rem ps ps_count_in_s) Span.frac_div.(frac))
 
-let to_rfc3339 ?(space = false) ?(frac = 0) ?(tz_offset_s = 0) (_, ps as t) =
+let to_rfc3339 ?(space = false) ?(frac = 0) ?tz_offset_s (_, ps as t) =
   let buf = Buffer.create 255 in
-  let tz_offset_s = rfc3339_adjust_tz_offset tz_offset_s in
+  let tz_offset_s, tz_unknown = match tz_offset_s with
+  | Some tz -> rfc3339_adjust_tz_offset tz
+  | None -> 0, true
+  in
   let (y, m, d), ((hh, ss, mm), tz_offset_s) = to_date_time ~tz_offset_s t in
   let dt_sep = if space then ' ' else 'T' in
   Printf.bprintf buf "%04d-%02d-%02d%c%02d:%02d:%02d" y m d dt_sep hh ss mm;
   if frac <> 0 then Printf.bprintf buf ".%0*Ld" frac (s_frac_of_ps frac ps);
-  if tz_offset_s = 0 then Printf.bprintf buf "Z" else
+  if tz_offset_s = 0 && not tz_unknown then Printf.bprintf buf "Z" else
   begin
-    let tz_sign = if tz_offset_s < 0 then '-' else '+' in
+    let tz_sign = if tz_offset_s < 0 || tz_unknown then '-' else '+' in
     let tz_min = abs (tz_offset_s / 60) in
     let tz_hh = tz_min / 60 in
     let tz_mm = tz_min mod 60 in
@@ -642,18 +645,18 @@ let pp_rfc3339 ?space ?frac ?tz_offset_s () ppf t =
 
 let pp_raw = Span.pp_raw
 let pp ?(frac = 0) ?(tz_offset_s = 0) () ppf (_, ps as t) =
-  let tz_offset_s = rfc3339_adjust_tz_offset tz_offset_s in
+  let tz_offset_s, tz_unknown = rfc3339_adjust_tz_offset tz_offset_s in
   let (y, m, d), ((hh, ss, mm), tz_offset_s) = to_date_time ~tz_offset_s t in
   Format.fprintf ppf "%04d-%02d-%02d %02d:%02d:%02d" y m d hh ss mm;
   if frac <> 0 then Format.fprintf ppf ".%0*Ld" frac (s_frac_of_ps frac ps);
-  let tz_sign = if tz_offset_s < 0 then '-' else '+' in
+  let tz_sign = if tz_offset_s < 0 || tz_unknown then '-' else '+' in
   let tz_min = abs (tz_offset_s / 60) in
   let tz_hh = tz_min / 60 in
   let tz_mm = tz_min mod 60 in
   Format.fprintf ppf " %c%02d:%02d" tz_sign tz_hh tz_mm;
   ()
 
-let pp_top = pp ()
+let pp_top = pp ~tz_offset_s:0 ()
 
 (*---------------------------------------------------------------------------
    Copyright (c) 2015 Daniel C. Bünzli.

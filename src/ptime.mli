@@ -409,12 +409,15 @@ val to_rfc3339 : ?space:bool -> ?frac:int -> ?tz_offset_s:tz_offset_s ->
     {{:https://tools.ietf.org/html/rfc3339#section-5.6}[date-time]}
     production with:
     {ul
-    {- [tz_offset_s] hints the timezone offset to use (defaults to
-       [0], i.e.  UTC). The hint is ignored and [0] is used in the
-       following cases: if [tz_offset_s] is not an integral number of
-       minutes and its magnitude not in the range permitted by the
-       standard, if [add_span t (Span.of_int_s tz_offset_s)] is [None]
-       (the resulting timestamp rendering would not be RFC 3339 compliant).}
+    {- [tz_offset_s] hints the timezone offset to use, use [0] for UTC.
+       The hint is ignored in the following cases: if [tz_offset_s] is not an
+       integral number of minutes and its magnitude not in the range permitted
+       by the standard, if [add_span t (Span.of_int_s tz_offset_s)] is [None]
+       (the resulting timestamp rendering would not be RFC 3339 compliant).
+       If either the hint is ignored or [tz_offset_s] is unspecified then
+       the
+       {{:https://tools.ietf.org/html/rfc3339#section-4.3}unknown local offset
+       convention} is used to render the timezone component.}
     {- [frac] in the range \[[0];[12]\] specifies that exactly
        [frac]th decimal digits of the fractional second of [t] are
        rendered (defaults to [0]).}

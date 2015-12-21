@@ -11,7 +11,7 @@ action ()
 {
     case $1 in
         default) action lib;;
-        lib) $OCAMLBUILD ptime.cma ptime.cmxa ;;
+        lib) $OCAMLBUILD ptime.cma ptime.cmxa ptime_top.cma ;;
         test)
             action lib
             $OCAMLBUILD test/tests.otarget
