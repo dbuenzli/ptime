@@ -70,8 +70,8 @@ let tz = test "Testing date-time timezone calculations" @@ fun () ->
 
 let subsecond = test "Subsecond stamp to date-time" @@ fun () ->
   let add, sub =
-    let add t ps = Ptime.(add_span t (Span.of_d_ps (0, ps))) in
-    let sub t ps = Ptime.(sub_span t (Span.of_d_ps (0, ps))) in
+    let add t ps = Ptime.(add_span t (Span.unsafe_of_d_ps (0, ps))) in
+    let sub t ps = Ptime.(sub_span t (Span.unsafe_of_d_ps (0, ps))) in
     add $ stamp @-> int64 @-> ret_get_option stamp,
     sub $ stamp @-> int64 @-> ret_get_option stamp
   in

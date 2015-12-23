@@ -6,15 +6,44 @@ archive(byte) = "ptime.cma"
 archive(byte, plugin) = "ptime.cma"
 archive(native) = "ptime.cmxa"
 archive(native, plugin) = "ptime.cmxs"
-exists_if = "ptime.cma"
 
 package "top" (
   description = "Ptime toplevel support"
-  version = "%%VERSION%%"
   requires = "ptime"
   archive(byte) = "ptime_top.cma"
   archive(byte, plugin) = "ptime_top.cma"
   archive(native) = "ptime_top.cmxa"
   archive(native, plugin) = "ptime_top.cmxs"
-  exists_if = "ptime_top.cma"
+)
+
+package "clock" (
+  package "os" (
+    directory="os"
+    description = "Ptime_clock for native OS"
+    requires = "ptime"
+    archive(byte) = "ptime_clock.cma"
+    archive(byte, plugin) = "ptime_clock.cma"
+    archive(native) = "ptime_clock.cmxa"
+    archive(native, plugin) = "ptime_clock.cmxs"
+    exists_if = "ptime_clock.cma"
+
+    package "top" (
+      description = "Ptime_clock native OS toplevel support"
+      requires = "ptime.top ptime.clock.os"
+      archive(byte) = "ptime_clock_top.cma"
+      archive(byte, plugin) = "ptime_clock_top.cma"
+      archive(native) = "ptime_clock_top.cmxa"
+      archive(native, plugin) = "ptime_clock_top.cmxs"
+      exists_if = "ptime_clock_top.cma"))
+
+  package "jsoo" (
+    directory="jsoo"
+    description = "Ptime_clock for js_of_ocaml"
+    requires = "js_of_ocaml ptime"
+    archive(byte) = "ptime_clock.cma"
+    archive(byte, plugin) = "ptime_clock.cma"
+    archive(native) = "ptime_clock.cmxa"
+    archive(native, plugin) = "ptime_clock.cmxs"
+    exists_if = "ptime_clock.cma"
+  )
 )

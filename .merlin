@@ -1,4 +1,8 @@
-PKG result
+PKG result js_of_ocaml
 S src
+S src-os
+S src-jsoo
 S test
+S test-os
+S test-jsoo
 B _build/**

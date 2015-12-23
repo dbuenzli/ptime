@@ -7,8 +7,8 @@
 open Testing
 open Testing_ptime
 
-let p s = Ptime.Span.of_d_ps s
-let n s = Ptime.Span.(neg (of_d_ps s))
+let p s = Ptime.Span.unsafe_of_d_ps s
+let n s = Ptime.Span.(neg (unsafe_of_d_ps s))
 let pps ps = p (0, ps)
 let nps ps = n (0, ps)
 
@@ -53,8 +53,8 @@ let conversions = test "Constants and conversions" @@ fun () ->
   trip_float (-1.);
   trip_float (Pervasives.float (1 lsl 30 - 1));
   trip_float (Pervasives.float (- (1 lsl 30)));
-  app_raises ~pp:span Ptime.Span.of_d_ps (23, -1L);
-  app_raises ~pp:span Ptime.Span.of_d_ps (23, 86_400_000_000_000_000L);
+  eq_span_opt (Ptime.Span.of_d_ps (23, -1L)) None;
+  eq_span_opt (Ptime.Span.of_d_ps (23, 86_400_000_000_000_000L)) None;
   ()
 
 let predicates = test "Predicates" @@ fun () ->
@@ -178,8 +178,8 @@ let rounding = test "Rounding" @@ fun () ->
 let pretty_printing =
   test "Pretty printing" @@ fun () ->
   let fmt s = Format.asprintf "%a" Ptime.Span.pp s in
-  let p s = fmt @@ Ptime.Span.of_d_ps s in
-  let n s = fmt @@ Ptime.Span.(neg (of_d_ps s)) in
+  let p s = fmt @@ Ptime.Span.unsafe_of_d_ps s in
+  let n s = fmt @@ Ptime.Span.(neg (unsafe_of_d_ps s)) in
   let pps ps = p (0, ps) in
   let nps ps = n (0, ps) in
   (* y d *)

@@ -6,13 +6,6 @@
 
 open Result
 
-(* Errors *)
-
-let strf = Format.asprintf
-
-let err_span_d_ps d ps ps_max =
-  strf "picosecond count of (%d,%Ld) not in range [0;%Ld]" d ps ps_max
-
 (* Julian day and proleptic Gregorian calendar date conversion.
 
    Formulae are from the calendar FAQ:
@@ -115,10 +108,9 @@ module Span = struct
 
   let zero = (0, 0L)
 
-  let of_d_ps (d, ps as s) =
-    if ps < 0L || ps > ps_day_max
-    then invalid_arg (err_span_d_ps d ps ps_day_max)
-    else s
+  let of_d_ps (d, ps as s) = if ps < 0L || ps > ps_day_max then None else Some s
+  let unsafe_of_d_ps s = s
+  let unsafe_of_d_ps_option s = s
 
   let of_int_s secs =
     let d = Pervasives.abs secs in
@@ -314,6 +306,8 @@ let min = (* 0000-01-01 00:00:00 UTC *)
 
 let max = (* 9999-12-31 23:59:59 UTC *)
   (jd_ptime_max - jd_posix_epoch, ps_day_max)
+
+let unsafe_of_d_ps s = s
 
 let of_span span =
   if compare span (* < *) min = -1 ||

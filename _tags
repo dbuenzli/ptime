@@ -1,7 +1,17 @@
-<**/*.{ml,mli}> : bin_annot, safe_string, package(result)
+true : bin_annot, safe_string, package(result)
 
 <src> : include
+
 <src/ptime_top*> : package(compiler-libs.toplevel)
+
+<src-os/ptime_clock.{cma,cmxa}> : use_ptime_clock
+<src-os/ptime_clock.cmxs> : link_ptime_clock
+<src-os/ptime_clock_top*> : package(compiler-libs.toplevel)
 
 <test> : include
 <test/test_unix*> : package(unix)
+
+<test-os/*> : link_ptime_clock
+<test-os/min_clock_os.byte> : custom
+
+<{src,test}-jsoo/*> : package(js_of_ocaml)

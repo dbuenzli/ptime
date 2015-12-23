@@ -8,12 +8,18 @@ with picosecond precision, conversion with date-time values,
 conversion with [RFC 3339 timestamps][1] and pretty printing to a
 human-readable, locale-independent representation.
 
+The additional Ptime_clock library provides access to a system POSIX
+clock and to the system's current timezone offset.
+
 Ptime is not a calendar library.
 
-Ptime depends on the `result` compatibility package and is distributed
-under the BSD3 license.
+Ptime depends on the `result` compatibility package. Ptime_clock
+depends on your system library. Ptime_clock's optional JavaScript
+support depends on [js_of_ocaml][2]. Ptime and its libraries are
+distributed under the BSD3 license.
 
 [1]: http://tools.ietf.org/html/rfc3339
+[2]: http://ocsigen.org/js_of_ocaml/
 
 Home page: http://erratique.ch/software/ptime  
 Contact: Daniel Bünzli `<daniel.buenzl i@erratique.ch>`
@@ -23,6 +29,7 @@ Contact: Daniel Bünzli `<daniel.buenzl i@erratique.ch>`
 Ptime can be installed with `opam`:
 
     opam install ptime
+    opam install js_of_ocaml ptime  # ptime with jsoo support
 
 If you don't use `opam` consult the [`opam`](opam) file for build
 instructions.

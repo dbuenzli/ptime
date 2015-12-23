@@ -13,7 +13,8 @@
     3339 timestamps} and {{!print}pretty printing} to a
     human-readable, locale-independent representation.
 
-    {!Ptime} is not a calendar library.
+    {!Ptime_clock} provides access to a system POSIX clock and the system's
+    current timezone offset. {!Ptime} is not a calendar library.
 
     Consult the {{!basics}basics} and a few {{!notes}notes
     and limitations}.
@@ -50,13 +51,17 @@ module Span : sig
   val zero : span
   (** [zero] is the neutral element of {!add}. *)
 
-  val of_d_ps : int * int64 -> span
+  val of_d_ps : int * int64 -> span option
   (** [of_d_ps (d, ps)] is a span for the signed POSIX picosecond
       span [d] * 86_400e12 + [ps]. [d] is a signed number of POSIX
       days and [ps] a number of picoseconds in the range
-      \[[0];[86_399_999_999_999_999L]\].
+      \[[0];[86_399_999_999_999_999L]\]. [None] is returned if
+      [ps] is not in the right range. *)
 
-      @raise Invalid_argument if [ps] is not in the right range. *)
+  (**/**)
+  val unsafe_of_d_ps : int * int64 -> span
+  val unsafe_of_d_ps_option : (int * int64) option -> span option
+  (**/**)
 
   val to_d_ps : span -> int * int64
   (** [to_d_ps d] is the span [d] as a pair [(d, ps)] expressing the
@@ -153,8 +158,8 @@ end
 
 type t
 (** The type for picosecond precision POSIX timestamps in the range
-    \[{!min};{!max}\]. Note that POSIX timestamps are by definition
-    always on the UTC timeline. *)
+    \[{!min};{!max}\]. Note that POSIX timestamps, and hence values of
+    this type, are by definition always on the UTC timeline. *)
 
 val epoch : t
 (** [epoch] is 1970-01-01 00:00:00 UTC. *)
@@ -183,6 +188,10 @@ val to_span : t -> span
     {ul
     {- If the number is positive [t] happens {e after} {!epoch}.}
     {- If the number is negative [t] happens {e before} {!epoch}.}} *)
+
+(**/**)
+val unsafe_of_d_ps : int * int64 -> t
+(**/**)
 
 val of_float_s : float -> t option
 (** [of_float_s d] is like {!of_span} but with [d] as a floating point
