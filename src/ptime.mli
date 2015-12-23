@@ -4,7 +4,7 @@
    %%NAME%% release %%VERSION%%
   ---------------------------------------------------------------------------*)
 
-(** POSIX time.
+(** POSIX time values.
 
     {!Ptime} has platform independent support for POSIX time. It
     provides a {{!t}type} to represent a well-defined range of POSIX
@@ -434,11 +434,14 @@ val pp_human : ?frac_s:int -> ?tz_offset_s:tz_offset_s -> unit ->
 (** [pp_human ~frac_s ~tz_offset_s () ppf t] prints an unspecified, human
     readable, locale-independent, representation of [t] with:
     {ul
-    {- [tz_offset_s] hints the timezone offset to use (defaults to
-       [0], i.e.  UTC). The hint is ignored and [0] is used in the
-       following cases: if [tz_offset_s] is not an integral number of
-       minutes and its magnitude not in the range permitted by the
-       standard, if [add_span t (Span.of_int_s tz_offset_s)] is [None].}
+    {- [tz_offset_s] hints the timezone offset to use. The hint is ignored
+       in the following cases: if [tz_offset_s] is not an integral number of
+       minutes and its magnitude not in the range permitted by the standard,
+       if [add_span t (Span.of_int_s tz_offset_s)] is [None].
+       If either the hint is ignored or [tz_offset_s] is unspecified then
+       RFC 3339's
+       {{:https://tools.ietf.org/html/rfc3339#section-4.3}unknown local offset
+       convention} is used to render the timezone component.}
     {- [frac_s] clipped to the range \[[0];[12]\] specifies that exactly
        [frac_s] decimal digits of the fractional second of [t] are
        rendered (defaults to [0]).}}

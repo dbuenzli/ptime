@@ -637,8 +637,11 @@ let pp_rfc3339 ?space ?frac_s ?tz_offset_s () ppf t =
 
 (* Pretty printing *)
 
-let pp_human ?frac_s:(frac = 0) ?(tz_offset_s = 0) () ppf (_, ps as t) =
-  let tz_offset_s, tz_unknown = rfc3339_adjust_tz_offset tz_offset_s in
+let pp_human ?frac_s:(frac = 0) ?tz_offset_s () ppf (_, ps as t) =
+  let tz_offset_s, tz_unknown = match tz_offset_s with
+  | Some tz -> rfc3339_adjust_tz_offset tz
+  | None -> 0, true
+  in
   let (y, m, d), ((hh, ss, mm), tz_offset_s) = to_date_time ~tz_offset_s t in
   Format.fprintf ppf "%04d-%02d-%02d %02d:%02d:%02d" y m d hh ss mm;
   let frac = if frac < 0 then 0 else (if frac > 12 then 12 else frac) in
