@@ -114,17 +114,28 @@ CAMLprim value ocaml_ptime_clock_period_d_ps (value unit)
 
 CAMLprim value ocaml_ptime_clock_current_tz_offset_s (value unit)
 {
-  time_t utc = time (NULL);
-  if (utc == (time_t)-1) return Val_none;
+  struct tm *tm;
 
-  struct tm *tm = gmtime (&utc);
+  time_t now_utc = time (NULL);
+  if (now_utc == (time_t)-1) return Val_none;
+
+  tm = localtime (&now_utc);
   if (tm == NULL) return Val_none;
+  struct tm local = *tm;
 
-  time_t alpha = mktime (tm);    /* mktime (gmtime (utc)) = utc - tzoff */
-  if (alpha == (time_t)-1) return Val_none;
+  tm = gmtime (&now_utc);
+  if (tm == NULL) return Val_none;
+  struct tm utc = *tm;
+
+  int dd = local.tm_yday - utc.tm_yday;
+  int dh = local.tm_hour - utc.tm_hour;
+  int dm = dh * 60 + (local.tm_min - utc.tm_min);
+  dm = (dd ==  1 || dd < -1 /* year wrap */) ? dm + (24 * 60) :
+       (dd == -1 || dd >  1 /* year wrap */) ? dm - (24 * 60) :
+       dm /* same day */;
 
   value some = caml_alloc (1, 0);
-  Store_field (some, 0, Val_int (utc - alpha));
+  Store_field (some, 0, Val_int (dm * 60));
   return some;
 }
 
