@@ -14,7 +14,7 @@
     human-readable, locale-independent representation.
 
     {!Ptime_clock} provides access to a system POSIX clock and the system's
-    current timezone offset. {!Ptime} is not a calendar library.
+    current time zone offset. {!Ptime} is not a calendar library.
 
     Consult the {{!basics}basics} and a few {{!notes}notes
     and limitations}.
@@ -381,7 +381,7 @@ val of_rfc3339 : ?strict:bool -> ?sub:bool -> ?start:int -> string ->
     with:
     {ul
     {- [t] the POSIX timestamp (hence on the UTC timeline).}
-    {- [tz], the optional {{!tz_offset_s}timezone offset} found in the
+    {- [tz], the optional {{!tz_offset_s}time zone offset} found in the
        timestamp. [None] is returned iff the date-time satisfies the
        {{:https://tools.ietf.org/html/rfc3339#section-4.3}unknown local
        offset convention}.}
@@ -415,7 +415,7 @@ val to_rfc3339 : ?space:bool -> ?frac_s:int -> ?tz_offset_s:tz_offset_s ->
     {{:https://tools.ietf.org/html/rfc3339#section-5.6}[date-time]}
     production with:
     {ul
-    {- [tz_offset_s] hints the timezone offset to use, use [0] for UTC.
+    {- [tz_offset_s] hints the time zone offset to use, use [0] for UTC.
        The hint is ignored in the following cases: if [tz_offset_s] is not an
        integral number of minutes and its magnitude not in the range permitted
        by the standard, if [add_span t (Span.of_int_s tz_offset_s)] is [None]
@@ -423,7 +423,7 @@ val to_rfc3339 : ?space:bool -> ?frac_s:int -> ?tz_offset_s:tz_offset_s ->
        If either the hint is ignored or [tz_offset_s] is unspecified then
        the
        {{:https://tools.ietf.org/html/rfc3339#section-4.3}unknown local offset
-       convention} is used to render the timezone component.}
+       convention} is used to render the time zone component.}
     {- [frac_s], clipped to the range \[[0];[12]\] specifies that exactly
        [frac_s] decimal digits of the fractional second of [t] are
        rendered (defaults to [0]).}
@@ -443,14 +443,14 @@ val pp_human : ?frac_s:int -> ?tz_offset_s:tz_offset_s -> unit ->
 (** [pp_human ~frac_s ~tz_offset_s () ppf t] prints an unspecified, human
     readable, locale-independent, representation of [t] with:
     {ul
-    {- [tz_offset_s] hints the timezone offset to use. The hint is ignored
+    {- [tz_offset_s] hints the time zone offset to use. The hint is ignored
        in the following cases: if [tz_offset_s] is not an integral number of
        minutes and its magnitude not in the range permitted by the standard,
        if [add_span t (Span.of_int_s tz_offset_s)] is [None].
        If either the hint is ignored or [tz_offset_s] is unspecified then
        RFC 3339's
        {{:https://tools.ietf.org/html/rfc3339#section-4.3}unknown local offset
-       convention} is used to render the timezone component.}
+       convention} is used to render the time zone component.}
     {- [frac_s] clipped to the range \[[0];[12]\] specifies that exactly
        [frac_s] decimal digits of the fractional second of [t] are
        rendered (defaults to [0]).}}

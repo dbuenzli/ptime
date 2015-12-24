@@ -43,7 +43,7 @@ let time_bounds = test "Date-time time field bounds" @@ fun () ->
   wrong_date_time (min_utc (00, 00, 61));
   ()
 
-let tz = test "Testing date-time timezone calculations" @@ fun () ->
+let tz = test "Testing date-time time zone calculations" @@ fun () ->
   (* Timestamps with tz offsets around Ptime.{max,min} *)
   wrong_date_time ((0000, 01, 01), ((00, 00, 00), +1));
   valid_date_time ((0000, 01, 01), ((00, 00, 00), +0));
@@ -51,7 +51,7 @@ let tz = test "Testing date-time timezone calculations" @@ fun () ->
   wrong_date_time ((9999, 12, 31), ((23, 59, 59), -1));
   wrong_date_time ((9999, 12, 31), ((23, 59, 60), +0));
   valid_date_time ((9999, 12, 31), ((23, 59, 60), +1));
-  (* Convert timezones *)
+  (* Convert time zones *)
   let nyc_tz = -4 * 3600 in
   let cam_tz = +1 * 3600 in
   let lau_tz = +2 * 3600 in

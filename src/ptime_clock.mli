@@ -7,7 +7,7 @@
 (** POSIX time clock.
 
     [Ptime_clock] provides access to a system POSIX time clock and to
-    the system's current timezone offset.
+    the system's current time zone offset.
 
     This time does not increase monotically and is subject to system
     calendar time adjustments. Use {!Mtime} if you need monotonic
@@ -30,7 +30,7 @@ val period : unit -> Ptime.span option
 (** [period ()] is a positive POSIX time span representing
     the clock's period (if available). *)
 
-(** {1:tz System timezone offset} *)
+(** {1:tz System time zone offset} *)
 
 val current_tz_offset_s : unit -> Ptime.tz_offset_s option
 (** [current_tz_offset_s ()] is the system's current local time zone

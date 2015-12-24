@@ -9,7 +9,7 @@ conversion with [RFC 3339 timestamps][1] and pretty printing to a
 human-readable, locale-independent representation.
 
 The additional Ptime_clock library provides access to a system POSIX
-clock and to the system's current timezone offset.
+clock and to the system's current time zone offset.
 
 Ptime is not a calendar library.
 

@@ -41,7 +41,7 @@ let now () =
 
 let period () = Ptime.Span.unsafe_of_d_ps_option date_period
 
-(* System timezone offset *)
+(* System time zone offset *)
 
 let current_tz_offset_s () =
   let d = Js.Unsafe.new_obj date [||] in

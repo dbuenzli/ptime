@@ -25,7 +25,7 @@ let period_d_ps = ptime_clock_period_d_ps
 let now () = Ptime.unsafe_of_d_ps (now_d_ps ())
 let period () = Ptime.Span.unsafe_of_d_ps_option (ptime_clock_period_d_ps ())
 
-(* System timezone offset *)
+(* System time zone offset *)
 
 let current_tz_offset_s = ptime_clock_current_tz_offset_s
 
