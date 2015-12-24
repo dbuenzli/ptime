@@ -16,6 +16,10 @@ let valid_date_time d =
 let wrong_date_time d =
   ignore ((Ptime.of_date_time $ raw_date_time @-> ret_none stamp) d)
 
+let span_of_d_ps s = match Ptime.Span.of_d_ps s with
+| None -> invalid_arg ""
+| Some s -> s
+
 let time_bounds = test "Date-time time field bounds" @@ fun () ->
   let min_date = Ptime.to_date Ptime.min in
   let min_utc t = min_date, (t, 0) in
@@ -70,8 +74,8 @@ let tz = test "Testing date-time time zone calculations" @@ fun () ->
 
 let subsecond = test "Subsecond stamp to date-time" @@ fun () ->
   let add, sub =
-    let add t ps = Ptime.(add_span t (Span.unsafe_of_d_ps (0, ps))) in
-    let sub t ps = Ptime.(sub_span t (Span.unsafe_of_d_ps (0, ps))) in
+    let add t ps = Ptime.(add_span t (span_of_d_ps (0, ps))) in
+    let sub t ps = Ptime.(sub_span t (span_of_d_ps (0, ps))) in
     add $ stamp @-> int64 @-> ret_get_option stamp,
     sub $ stamp @-> int64 @-> ret_get_option stamp
   in

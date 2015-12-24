@@ -7,8 +7,12 @@
 open Testing
 open Testing_ptime
 
+let span_of_d_ps s = match Ptime.Span.of_d_ps s with
+| None -> invalid_arg ""
+| Some s -> s
+
 let base = test "Constants and base constructors" @@ fun () ->
-  let of_span s = Ptime.(of_span Span.(unsafe_of_d_ps s)) in
+  let of_span s = Ptime.(of_span (span_of_d_ps s)) in
   let to_raw_span t = Ptime.(Span.to_d_ps (to_span t)) in
   eq_raw_span (to_raw_span Ptime.epoch) (0, 0L);
   eq_stamp_opt (of_span (0, 0L)) (Some Ptime.epoch);
@@ -56,8 +60,8 @@ let predicates = test "Predicates" @@ fun () ->
   ()
 
 let posix_arithmetic = test "POSIX arithmetic" @@ fun () ->
-  let span ps = Ptime.Span.unsafe_of_d_ps (0, ps) in
-  let nspan ps = Ptime.Span.(neg (unsafe_of_d_ps (0, ps))) in
+  let span ps = span_of_d_ps (0, ps) in
+  let nspan ps = Ptime.Span.(neg (span_of_d_ps (0, ps))) in
   (* Test limits *)
   eq_stamp_opt Ptime.(add_span max (span 1L)) None;
   eq_stamp_opt Ptime.(add_span min (nspan (1L))) None;
@@ -69,7 +73,7 @@ let posix_arithmetic = test "POSIX arithmetic" @@ fun () ->
   eq_stamp_opt (Ptime.of_span (nspan (10L))) Ptime.(sub_span epoch (span 10L));
   block @@ begin fun () ->
     let of_span ps =
-      let s = Ptime.Span.unsafe_of_d_ps (0, Int64.abs ps) in
+      let s = span_of_d_ps (0, Int64.abs ps) in
       Ptime.of_span (if ps < 0L then Ptime.Span.neg s else s)
     in
     let get = of_span $ int64 @-> ret_get_option stamp in

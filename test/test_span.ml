@@ -7,8 +7,11 @@
 open Testing
 open Testing_ptime
 
-let p s = Ptime.Span.unsafe_of_d_ps s
-let n s = Ptime.Span.(neg (unsafe_of_d_ps s))
+let p s = match Ptime.Span.of_d_ps s with
+| None -> invalid_arg ""
+| Some s -> s
+
+let n s = Ptime.Span.(neg (p s))
 let pps ps = p (0, ps)
 let nps ps = n (0, ps)
 
@@ -178,8 +181,8 @@ let rounding = test "Rounding" @@ fun () ->
 let pretty_printing =
   test "Pretty printing" @@ fun () ->
   let fmt s = Format.asprintf "%a" Ptime.Span.pp s in
-  let p s = fmt @@ Ptime.Span.unsafe_of_d_ps s in
-  let n s = fmt @@ Ptime.Span.(neg (unsafe_of_d_ps s)) in
+  let n s = fmt @@ Ptime.Span.(neg (p s)) in
+  let p s = fmt @@ p s in
   let pps ps = p (0, ps) in
   let nps ps = n (0, ps) in
   (* y d *)
