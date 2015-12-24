@@ -80,6 +80,13 @@ let ps_count_in_hour  =   3600_000_000_000_000L
 let ps_count_in_day   = 86_400_000_000_000_000L
 let ps_day_max        = 86_399_999_999_999_999L
 
+let day_min = jd_ptime_min - jd_posix_epoch
+let day_max = jd_ptime_max - jd_posix_epoch
+
+let epoch = (0, 0L)             (* 1970-01-01 00:00:00 UTC *)
+let min = (day_min, 0L)         (* 0000-01-01 00:00:00 UTC *)
+let max = (day_max, ps_day_max) (* 9999-12-31 23:59:59 UTC *)
+
 (* POSIX time spans *)
 
 type span = t
@@ -111,6 +118,7 @@ module Span = struct
   let of_d_ps (d, ps as s) = if ps < 0L || ps > ps_day_max then None else Some s
   let unsafe_of_d_ps s = s
   let unsafe_of_d_ps_option s = s
+  let to_d_ps s = s
 
   let of_int_s secs =
     let d = Pervasives.abs secs in
@@ -125,8 +133,6 @@ module Span = struct
     let day_s = Int64.(to_int (div ps ps_count_in_s)) (* always positive *) in
     let secs = days_s + day_s in
     if secs < days_s (* positive overflow *) then None else Some secs
-
-  let to_d_ps s = s
 
   let min_int_float = float min_int
   let max_int_float = float max_int
@@ -298,22 +304,10 @@ end
 
 (* POSIX timestamps *)
 
-let epoch = (* 1970-01-01 00:00:00 UTC *)
-  (0, 0L)
-
-let min = (* 0000-01-01 00:00:00 UTC *)
-  (jd_ptime_min - jd_posix_epoch, 0L)
-
-let max = (* 9999-12-31 23:59:59 UTC *)
-  (jd_ptime_max - jd_posix_epoch, ps_day_max)
-
 let unsafe_of_d_ps s = s
 
-let of_span span =
-  if compare span (* < *) min = -1 ||
-     compare span (* > *) max = 1
-  then None
-  else Some span
+let of_span (d, _ as span) =
+  if d < day_min || d > day_max then None else Some span
 
 let to_span t = t
 
