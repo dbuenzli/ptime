@@ -35,8 +35,8 @@ let now () =
     Ptime.unsafe_of_d_ps (days, 0L)
   else
   let frac_ms, rem_ms = modf rem_ms in
-  let rem_ps = Int64.(mul (of_float rem_ms) 1_000_000_000L) in
   let frac_ps = Int64.(of_float (frac_ms *. 1e9)) in
+  let rem_ps = Int64.(mul (of_float rem_ms) 1_000_000_000L) in
   Ptime.unsafe_of_d_ps (days, (Int64.add rem_ps frac_ps))
 
 let period () = Ptime.Span.unsafe_of_d_ps_option date_period
