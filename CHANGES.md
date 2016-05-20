@@ -1,4 +1,5 @@
 
+* Build depend on topkg.
 * Relicense from BSD3 to ISC.
 
 v0.8.0 2015-12-24 Cambridge (UK)

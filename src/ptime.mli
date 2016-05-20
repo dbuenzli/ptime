@@ -26,7 +26,7 @@
     {{:http://tools.ietf.org/html/rfc3339}
     {e Date and Time on the Internet: Timestamps}}. RFC 3339, 2002.}}
 
-    {e Release %%VERSION%% - %%MAINTAINER%% } *)
+    {e %%VERSION%% - {{:%%PKG_HOMEPAGE%% }homepage}} *)
 
 open Result
 

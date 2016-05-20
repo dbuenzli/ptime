@@ -16,7 +16,7 @@
     Consult important information about {{!err}error handling}
     and {{!platform_support}platform support}.
 
-    {e Release %%VERSION%% - %%MAINTAINER%% } *)
+    {e %%VERSION%% - {{:%%PKG_HOMEPAGE%% }homepage}} *)
 
 (** {1:clock POSIX clock} *)
 

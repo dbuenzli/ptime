@@ -4,5 +4,6 @@ CLOCK.org
 *~
 \.\#*
 \#*#
-*.native 
+*.native
 *.byte
+*.install

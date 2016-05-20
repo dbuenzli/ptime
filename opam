@@ -11,13 +11,11 @@ available: [ ocaml-version >= "4.01.0"]
 depends: [
  "ocamlfind" {build}
  "ocamlbuild" {build}
+ "topkg" {build}
  "result"
 ]
 depopts: [ "js_of_ocaml" ]
-build:
-[
-  [ "ocaml" "pkg/git.ml" ]
-  [ "ocaml" "pkg/build.ml" "native=%{ocaml-native}%"
-                           "native-dynlink=%{ocaml-native-dynlink}%"
-                           "jsoo=%{js_of_ocaml:installed}%"]
-]
+build:[[
+   "ocaml" "pkg/pkg.ml" "build"
+   "--installer" "true"
+   "--with-js_of_ocaml" "%{js_of_ocaml:installed}%" ]]
