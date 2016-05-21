@@ -33,12 +33,12 @@ action ()
             $OCAMLBUILD -I src-jsoo test-jsoo/tests.otarget;
             shift;
             if [ "$1" = "-b" ]; then
-                reload-browser \
+                topkg browse \
                 "http://localhost/ptime/test-jsoo/min_clock_jsoo.html"
-            fi
+            fiOA
             ;;
-        doc)     shift; pkg-doc $* doc/dev-api.docdir ;;
-        api-doc) shift; pkg-doc $* doc/api.docdir ;;
+        doc)     shift; topkg doc --dev $* ;;
+        api-doc) shift; topkg doc $* ;;
         clean)   $OCAMLBUILD -clean ;;
         *)       $OCAMLBUILD $* ;;
     esac
