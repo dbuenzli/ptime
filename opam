@@ -17,5 +17,5 @@ depends: [
 depopts: [ "js_of_ocaml" ]
 build:[[
    "ocaml" "pkg/pkg.ml" "build"
-   "--installer" "true"
+   "--pinned" "%{pinned}%"
    "--with-js_of_ocaml" "%{js_of_ocaml:installed}%" ]]
