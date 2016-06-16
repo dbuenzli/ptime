@@ -47,14 +47,3 @@ distribution.
 
 If you installed Ptime with `opam` sample programs are located in
 the directory `opam config var ptime:doc`.
-
-In the distribution sample programs are located in the `test`
-directory of the distribution. They can be built with:
-
-    ocamlbuild -use-ocamlfind test/tests.otarget
-
-The resulting binaries are in `_build/test`.
-
-- `test.native` tests the library, nothing should fail.
-- `test_unix.native` tests the library against the results
-   of `Unix.gmtime`. Invoke with `--help` for more informations.
