@@ -1,6 +1,6 @@
 Ptime — POSIX time for OCaml
 -------------------------------------------------------------------------------
-Release %%VERSION%%
+%%VERSION%%
 
 Ptime has platform independent POSIX time support in pure OCaml. It
 provides a type to represent a well-defined range of POSIX timestamps
