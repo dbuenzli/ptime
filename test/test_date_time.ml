@@ -188,8 +188,7 @@ let suite = suite "Ptime date-time tests"
       leap_sec;
       stamp_trips;
       round_trips;
-      weekday;
-    ]
+      weekday; ]
 
 (*---------------------------------------------------------------------------
    Copyright (c) 2015 Daniel C. Bünzli
