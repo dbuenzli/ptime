@@ -1,3 +1,5 @@
+v0.8.1 2015-07-14 Cambridge (UK)
+--------------------------------
 
 * Add `Ptime.v` and `Ptime.Span.v` to safely deal with trusted
   inputs. Thanks to Matt Gray for suggesting.
