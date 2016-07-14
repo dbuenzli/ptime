@@ -1,4 +1,6 @@
 
+* Add `Ptime.v` and `Ptime.Span.v` to safely deal with trusted
+  inputs. Thanks to Matt Gray for suggesting.
 * Build depend on topkg.
 * Relicense from BSD3 to ISC.
 

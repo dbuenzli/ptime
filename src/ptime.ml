@@ -114,6 +114,10 @@ module Span = struct
   type t = span
 
   let zero = (0, 0L)
+  let v (d, ps as s) =
+    if ps < 0L || ps > ps_day_max
+    then invalid_arg (Format.sprintf "illegal ptime time span: (%d,%Ld)" d ps)
+    else s
 
   let of_d_ps (d, ps as s) = if ps < 0L || ps > ps_day_max then None else Some s
   let unsafe_of_d_ps s = s
@@ -303,6 +307,11 @@ module Span = struct
 end
 
 (* POSIX timestamps *)
+
+let v (d, ps as s) =
+  if (ps < 0L || ps > ps_day_max || d < day_min || d > day_max)
+  then invalid_arg (Format.sprintf "illegal ptime timestamp: (%d,%Ld)" d ps)
+  else s
 
 let unsafe_of_d_ps s = s
 
