@@ -7,6 +7,14 @@
 open Testing
 open Testing_ptime
 
+let eq_weekday pd d =
+  let eq_int v v' = eq ~eq:(=) ~pp:pp_int v v' in
+  let pd = match pd with
+  | `Sun -> 0 | `Mon -> 1 | `Tue -> 2 | `Wed -> 3 | `Thu -> 4 | `Fri -> 5
+  | `Sat -> 6
+  in
+  eq_int pd d
+
 let rand_stamp =
   Test_rand.(if Sys.word_size = 32 then float_stamp_32bits else float_stamp)
 
@@ -19,12 +27,13 @@ let unix_to_date_time t =
   let tm = Unix.gmtime t in
   let d = (tm.Unix.tm_year + 1900), (tm.Unix.tm_mon + 1), (tm.Unix.tm_mday) in
   let t = tm.Unix.tm_hour, tm.Unix.tm_min, tm.Unix.tm_sec in
-  (d, (t, 0))
+  (d, (t, 0)), tm.Unix.tm_wday
 
 let compare t =
-  let dt = unix_to_date_time t in
+  let dt, wday = unix_to_date_time t in
   let ut = Ptime.to_date_time t in
   eq_date_time dt ut;
+  eq_weekday (Ptime.weekday t) wday;
   dt
 
 let compare = compare $ stamp @-> ret raw_date_time

@@ -358,6 +358,11 @@ val of_date : date -> t option
 val to_date : t -> date
 (** [to_date t] is [fst (to_date_time t)]. *)
 
+val weekday : t -> [ `Mon | `Tue | `Wed | `Thu | `Fri | `Sat | `Sun ]
+(** [weekday t] is the day of [t] in the 7-day week. This can be used
+    with {!to_date_time} to convert timestamps to denormalized timestamp
+    formats. *)
+
 (** {1:rfc3339 RFC 3339 timestamp conversions} *)
 
 type error_range = int * int

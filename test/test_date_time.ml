@@ -165,13 +165,31 @@ let round_trips =
   done;
   ()
 
+let weekday =
+  test "Ptime.weekday" @@ fun () ->
+  let pp_weekday ppf v = Format.pp_print_string ppf begin match v with
+    | `Mon -> "`Mon" | `Tue -> "`Tue" | `Wed -> "`Wed" | `Thu -> "`Thu"
+    | `Fri -> "`Fri" | `Sat -> "`Sat" | `Sun -> "`Sun"
+    end
+  in
+  let eq_weekday v v' = eq ~eq:(=) ~pp:pp_weekday v v' in
+  let eq c wday =
+    eq_weekday (Ptime.weekday (stamp_of_date_time (c, ((0, 0, 0), 0)))) wday
+  in
+  eq (1970, 01, 01) `Thu;
+  eq (1871, 03, 18) `Sat;
+  eq (1995, 09, 12) `Tue;
+  ()
+
 let suite = suite "Ptime date-time tests"
     [ time_bounds;
       tz;
       subsecond;
       leap_sec;
       stamp_trips;
-      round_trips; ]
+      round_trips;
+      weekday;
+    ]
 
 (*---------------------------------------------------------------------------
    Copyright (c) 2015 Daniel C. Bünzli

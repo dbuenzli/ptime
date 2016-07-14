@@ -439,6 +439,15 @@ let to_date_time ?(tz_offset_s = 0) t =
 let of_date date = of_date_time (date, ((00, 00, 00), 0))
 let to_date t = fst (to_date_time ~tz_offset_s:0 t)
 
+let weekday =
+  let wday =
+    (* Epoch was a thursday *)
+    [| `Thu; `Fri; `Sat; `Sun; `Mon; `Tue; `Wed |]
+  in
+  fun (d, _) ->
+    let i = d mod 7 in
+    wday.(if i < 0 then 7 + i else i)
+
 (* RFC 3339 timestamp conversions *)
 
 (* RFC 3339 timestamp parser *)
