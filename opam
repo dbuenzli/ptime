@@ -2,7 +2,7 @@ opam-version: "1.2"
 maintainer: "Daniel Bünzli <daniel.buenzl i@erratique.ch>"
 authors: ["Daniel Bünzli <daniel.buenzl i@erratique.ch>"]
 homepage: "http://erratique.ch/software/ptime"
-doc: "http://erratique.ch/software/ptime"
+doc: "http://erratique.ch/software/ptime/doc"
 dev-repo: "http://erratique.ch/repos/ptime.git"
 bug-reports: "https://github.com/dbuenzli/ptime/issues"
 tags: [ "time" "posix" "system" "org:erratique" ]
