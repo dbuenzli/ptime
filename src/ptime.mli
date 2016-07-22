@@ -361,8 +361,8 @@ val to_date : t -> date
 val weekday :
   ?tz_offset_s:tz_offset_s -> t ->
   [ `Mon | `Tue | `Wed | `Thu | `Fri | `Sat | `Sun ]
-(** [weekday t] is the day in the 7-day week of timestamp [t] expressed
-    in the time zone offset [ts_offset_s] (defaults to [0]).
+(** [weekday ~tz_offset_s t] is the day in the 7-day week of timestamp [t]
+    expressed in the time zone offset [ts_offset_s] (defaults to [0]).
 
     This can be used with the time zone offset result of {!to_date_time}
     to convert timestamps to denormalized timestamp formats. *)
