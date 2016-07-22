@@ -327,9 +327,9 @@ val of_date_time : date * time -> t option
     the {{!basics}basics}. *)
 
 val to_date_time : ?tz_offset_s:int -> t -> date * time
-(** [to_date_time tz_offset t] is the date-time of the timestamp [t].
+(** [to_date_time ~tz_offset_s t] is the date-time of the timestamp [t].
 
-    [tz_offset] hints the time zone offset used for the resulting
+    [tz_offset_s] hints the time zone offset used for the resulting
     daytime component (defaults to [0], i.e. UTC). The offset is not
     honoured and fallbacks to [0] in case the resulting date-time
     rendering of the timestamp would yield an {{!date}invalid
