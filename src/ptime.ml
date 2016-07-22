@@ -444,7 +444,11 @@ let weekday =
     (* Epoch was a thursday *)
     [| `Thu; `Fri; `Sat; `Sun; `Mon; `Tue; `Wed |]
   in
-  fun (d, _) ->
+  fun ?(tz_offset_s = 0) t ->
+    let (d, _) = Span.add t (Span.of_int_s tz_offset_s) in
+    (* N.B. in contrast to [to_date_time] we don't care if we fall outside
+       [min;max]. Even if it happens the result of the computation is still
+       correct *)
     let i = d mod 7 in
     wday.(if i < 0 then 7 + i else i)
 

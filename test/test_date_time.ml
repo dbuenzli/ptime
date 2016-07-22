@@ -173,12 +173,20 @@ let weekday =
     end
   in
   let eq_weekday v v' = eq ~eq:(=) ~pp:pp_weekday v v' in
-  let eq c wday =
-    eq_weekday (Ptime.weekday (stamp_of_date_time (c, ((0, 0, 0), 0)))) wday
+  let eq ?tz_offset_s c wday =
+    eq_weekday (Ptime.weekday ?tz_offset_s
+                  (stamp_of_date_time (c, ((0, 0, 0), 0)))) wday
   in
   eq (1970, 01, 01) `Thu;
+  eq ~tz_offset_s:(-1) (1970, 01, 01) `Wed;
+  eq ~tz_offset_s:86400 (1970, 01, 01) `Fri;
   eq (1871, 03, 18) `Sat;
+  eq ~tz_offset_s:(-1) (1871, 03, 18) `Fri;
+  eq ~tz_offset_s:86400 (1871, 03, 18) `Sun;
   eq (1995, 09, 12) `Tue;
+  eq ~tz_offset_s:(-1) (1995, 09, 12) `Mon;
+  eq ~tz_offset_s:86400 (1995, 09, 12) `Wed;
+  eq ~tz_offset_s:172800 (1995, 09, 12) `Thu;
   ()
 
 let suite = suite "Ptime date-time tests"

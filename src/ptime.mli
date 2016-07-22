@@ -326,7 +326,7 @@ val of_date_time : date * time -> t option
     the POSIX timestamp that represents this inexisting instant. See
     the {{!basics}basics}. *)
 
-val to_date_time : ?tz_offset_s:int -> t -> date * time
+val to_date_time : ?tz_offset_s:tz_offset_s -> t -> date * time
 (** [to_date_time ~tz_offset_s t] is the date-time of the timestamp [t].
 
     [tz_offset_s] hints the time zone offset used for the resulting
@@ -358,10 +358,14 @@ val of_date : date -> t option
 val to_date : t -> date
 (** [to_date t] is [fst (to_date_time t)]. *)
 
-val weekday : t -> [ `Mon | `Tue | `Wed | `Thu | `Fri | `Sat | `Sun ]
-(** [weekday t] is the day of [t] in the 7-day week. This can be used
-    with {!to_date_time} to convert timestamps to denormalized timestamp
-    formats. *)
+val weekday :
+  ?tz_offset_s:tz_offset_s -> t ->
+  [ `Mon | `Tue | `Wed | `Thu | `Fri | `Sat | `Sun ]
+(** [weekday t] is the day in the 7-day week of timestamp [t] expressed
+    in the time zone offset [ts_offset_s] (defaults to [0]).
+
+    This can be used with the time zone offset result of {!to_date_time}
+    to convert timestamps to denormalized timestamp formats. *)
 
 (** {1:rfc3339 RFC 3339 timestamp conversions} *)
 

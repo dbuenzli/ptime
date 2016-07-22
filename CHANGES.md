@@ -1,3 +1,7 @@
+
+* Add `?tz_offset_s` optional argument to `Ptime.weekday`. Thanks
+  to Maxence Guesdon for suggesting.
+
 v0.8.1 2015-07-14 Cambridge (UK)
 --------------------------------
 
