@@ -1,3 +1,6 @@
+
+* Fix package for -custom linking.
+
 v0.8.2 2016-07-22 Zagreb
 ------------------------
 

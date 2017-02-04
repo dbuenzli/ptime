@@ -18,8 +18,13 @@ let () =
        Pkg.test "test/test";
        Pkg.test "test/test_unix";
        Pkg.test "test/basics";
-(*     Pkg.test "test-os/min_clock_os";
-       Pkg.test ~cond:jsoo ~auto:false "test-jsoo/tests.otarget"; *)
+(* Unable to find a way to convince ocamlbuild to make these work
+   because of https://github.com/ocaml/ocamlbuild/issues/122
+       Pkg.test "test-os/min_clock_os";
+       Pkg.test ~run:false ~cond:jsoo ~auto:false "test-jsoo/min_clock_jsoo.js";
+       Pkg.test
+         ~run:false ~cond:jsoo ~auto:false "test-jsoo/min_clock_jsoo.html";
+*)
        Pkg.doc "test-os/min_clock_os.ml";
        Pkg.doc "test-jsoo/min_clock_jsoo.ml";
        Pkg.doc "test-jsoo/min_clock_jsoo.html"; ]
