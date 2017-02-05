@@ -1,3 +1,5 @@
+v0.8.3 2017-02-05 La Forclaz (VS)
+---------------------------------
 
 * Fix package for -custom linking.
 
