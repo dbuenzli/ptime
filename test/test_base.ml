@@ -13,6 +13,7 @@ let span_of_d_ps s = match Ptime.Span.of_d_ps s with
 
 let base = test "Constants and base constructors" @@ fun () ->
   let of_span s = Ptime.(of_span (span_of_d_ps s)) in
+  let get_of_span s = match of_span s with None -> assert false | Some s -> s in
   let to_raw_span t = Ptime.(Span.to_d_ps (to_span t)) in
   eq_raw_span (to_raw_span Ptime.epoch) (0, 0L);
   eq_stamp_opt (of_span (0, 0L)) (Some Ptime.epoch);
@@ -36,6 +37,10 @@ let base = test "Constants and base constructors" @@ fun () ->
   eq_stamp_opt (Ptime.of_float_s infinity) None;
   eq_stamp_opt (Ptime.of_float_s ~-.infinity) None;
   eq_raw_span Ptime.(Span.to_d_ps (frac_s Ptime.max)) (0, 999_999_999_999L);
+  eq_span (Ptime.frac_s @@ get_of_span (0, 100_000_000_000L))
+    (span_of_d_ps (0, 100_000_000_000L));
+  eq_span (Ptime.frac_s @@ get_of_span (-1, 100_000_000_000L))
+    (span_of_d_ps (0, 100_000_000_000L));
   ()
 
 let predicates = test "Predicates" @@ fun () ->
