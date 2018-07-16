@@ -166,6 +166,8 @@ CAMLprim value ocaml_ptime_clock_period_d_ps (value unit)
 
 CAMLprim value ocaml_ptime_clock_current_tz_offset_s (value unit)
 {
+  CAMLparam1(unit);
+  CAMLlocal1(some);
   struct tm *tm;
 
   time_t now_utc = time (NULL);
@@ -186,15 +188,17 @@ CAMLprim value ocaml_ptime_clock_current_tz_offset_s (value unit)
        (dd == -1 || dd >  1 /* year wrap */) ? dm - (24 * 60) :
        dm /* same day */;
 
-  value some = caml_alloc (1, 0);
+  some = caml_alloc (1, 0);
   Store_field (some, 0, Val_int (dm * 60));
-  return some;
+  CAMLreturn(some);
 }
 
 #elif defined(OCAML_PTIME_WIN)
 
 CAMLprim value ocaml_ptime_clock_current_tz_offset_s (value unit)
 {
+  CAMLparam1(unit);
+  CAMLlocal1(some);
   TIME_ZONE_INFORMATION tz;
   int bias;
 
@@ -209,9 +213,9 @@ CAMLprim value ocaml_ptime_clock_current_tz_offset_s (value unit)
     OCAML_PTIME_RAISE_SYS_ERROR("GetTimeZoneInformation failed");
   }
 
-  value some = caml_alloc (1, 0);
+  some = caml_alloc (1, 0);
   Store_field (some, 0, Val_int (-bias * 60));
-  return some;
+  CAMLreturn(some);
 }
 
 #else /* OCAML_PTIME_UNSUPPORTED */
