@@ -1,4 +1,7 @@
 
+
+* `Ptime_clock`: Windows support. Thanks to IndiscriminateCoding
+  and David Allsopp for the contribution.
 * Fix `Ptime.frac_s` on pre-epoch time stamps. The function computed a
   span of `1s - f` instead of `f` on these.  This function is not used
   internally so this only affects users of this function that apply it

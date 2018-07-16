@@ -22,12 +22,16 @@
   #include <time.h>
   #include <sys/time.h>
 
-#elif defined (__unix__) || defined(__unix)
+#elif defined(__unix__) || defined(__unix)
  #include <unistd.h>
  #if defined(_POSIX_VERSION)
    #define OCAML_PTIME_POSIX
    #include <time.h>
  #endif
+
+#elif defined(_WIN32)
+  #define OCAML_PTIME_WIN
+  #include <windows.h>
 
 #else
   #warning OCaml Ptime_clock module: unsupported platform
@@ -106,6 +110,45 @@ CAMLprim value ocaml_ptime_clock_now_d_ps (value unit)
   CAMLreturn (pair);
 }
 
+#elif defined(OCAML_PTIME_WIN)
+
+CAMLprim value ocaml_ptime_clock_now_d_ps (value unit)
+{
+  CAMLparam1 (unit);
+  CAMLlocal1 (pair);
+  long sec, usec;
+  SYSTEMTIME stime;
+  FILETIME ftime;
+  ULARGE_INTEGER time;
+
+  GetSystemTime (&stime);
+  SystemTimeToFileTime (&stime, &ftime);
+  time.LowPart = ftime.dwLowDateTime;
+  time.HighPart = ftime.dwHighDateTime;
+
+#define EPOCH (116444736000000000ULL)
+  sec = (long)((time.QuadPart - EPOCH) / 10000000L);
+#undef EPOCH
+  usec = (long)(stime.wMilliseconds * 1000);
+
+  if (usec < 0 || usec > 999999)
+    OCAML_PTIME_RAISE_SYS_ERROR ("unreasonable usec in timeval");
+
+  if (sec < 0)
+    OCAML_PTIME_RAISE_SYS_ERROR ("negative sec in timeval");
+
+  int d = sec / 86400;
+  if (d > OCAML_PTIME_DAY_MAX)
+    OCAML_PTIME_RAISE_SYS_ERROR ("can't represent timeval in Ptime.t");
+
+  pair = caml_alloc (2, 0);
+  Store_field (pair, 0, Val_int (d));
+  Store_field (pair, 1,
+               caml_copy_int64 ((sec % 86400) * 1000000000000L +
+                                (usec * 1000000L)));
+  CAMLreturn (pair);
+}
+
 #else
 
 CAMLprim value ocaml_ptime_clock_now_d_ps (value unit)
@@ -161,6 +204,8 @@ CAMLprim value ocaml_ptime_clock_period_d_ps (value unit)
 
 CAMLprim value ocaml_ptime_clock_current_tz_offset_s (value unit)
 {
+  CAMLparam1(unit);
+  CAMLlocal1(some);
   struct tm *tm;
 
   time_t now_utc = time (NULL);
@@ -181,9 +226,37 @@ CAMLprim value ocaml_ptime_clock_current_tz_offset_s (value unit)
        (dd == -1 || dd >  1 /* year wrap */) ? dm - (24 * 60) :
        dm /* same day */;
 
-  value some = caml_alloc (1, 0);
+  some = caml_alloc (1, 0);
   Store_field (some, 0, Val_int (dm * 60));
-  return some;
+  CAMLreturn(some);
+}
+
+#elif defined(OCAML_PTIME_WIN)
+
+CAMLprim value ocaml_ptime_clock_current_tz_offset_s (value unit)
+{
+  CAMLparam1(unit);
+  CAMLlocal1(some);
+  TIME_ZONE_INFORMATION tz;
+  int bias;
+
+  DWORD ret = GetTimeZoneInformation(&tz);
+  if (ret == TIME_ZONE_ID_UNKNOWN)
+    bias = tz.Bias;
+  else if (ret == TIME_ZONE_ID_STANDARD)
+    bias = tz.Bias + tz.StandardBias;
+  else if (ret == TIME_ZONE_ID_DAYLIGHT)
+    bias = tz.Bias + tz.DaylightBias;
+  else {
+    OCAML_PTIME_RAISE_SYS_ERROR("GetTimeZoneInformation failed");
+  }
+
+  some = caml_alloc (1, 0);
+  /* Note that on Windows 'bias' is defined as (UTC - localtime),
+   * while ptime uses (localtime - UTC)
+   */
+  Store_field (some, 0, Val_int (-bias * 60));
+  CAMLreturn(some);
 }
 
 #else /* OCAML_PTIME_UNSUPPORTED */
