@@ -22,12 +22,17 @@
   #include <time.h>
   #include <sys/time.h>
 
-#elif defined (__unix__) || defined(__unix)
+#elif defined(__unix__) || defined(__unix)
  #include <unistd.h>
  #if defined(_POSIX_VERSION)
    #define OCAML_PTIME_POSIX
    #include <time.h>
  #endif
+
+#elif defined(_WIN32)
+  #define OCAML_PTIME_WIN
+  #include <sys/time.h>
+  #include <windows.h>
 
 #else
   #warning OCaml Ptime_clock module: unsupported platform
@@ -72,7 +77,7 @@ if (now.tv_nsec < 0 || now.tv_nsec > 999999999)
   CAMLreturn (pair);
 }
 
-#elif defined(OCAML_PTIME_DARWIN)
+#elif defined(OCAML_PTIME_DARWIN) || defined(OCAML_PTIME_WIN)
 
 CAMLprim value ocaml_ptime_clock_now_d_ps (value unit)
 {
@@ -183,6 +188,29 @@ CAMLprim value ocaml_ptime_clock_current_tz_offset_s (value unit)
 
   value some = caml_alloc (1, 0);
   Store_field (some, 0, Val_int (dm * 60));
+  return some;
+}
+
+#elif defined(OCAML_PTIME_WIN)
+
+CAMLprim value ocaml_ptime_clock_current_tz_offset_s (value unit)
+{
+  TIME_ZONE_INFORMATION tz;
+  int bias;
+
+  DWORD ret = GetTimeZoneInformation(&tz);
+  if (ret == TIME_ZONE_ID_UNKNOWN)
+    bias = tz.Bias;
+  else if (ret == TIME_ZONE_ID_STANDARD)
+    bias = tz.Bias + tz.StandardBias;
+  else if (ret == TIME_ZONE_ID_DAYLIGHT)
+    bias = tz.Bias + tz.DaylightBias;
+  else {
+    OCAML_PTIME_RAISE_SYS_ERROR("GetTimeZoneInformation failed");
+  }
+
+  value some = caml_alloc (1, 0);
+  Store_field (some, 0, Val_int (-bias * 60));
   return some;
 }
 
