@@ -31,7 +31,6 @@
 
 #elif defined(_WIN32)
   #define OCAML_PTIME_WIN
-  #include <sys/time.h>
   #include <windows.h>
 
 #else
@@ -129,7 +128,7 @@ CAMLprim value ocaml_ptime_clock_now_d_ps (value unit)
   time = ((uint64_t)ftime.dwLowDateTime) +
          (((uint64_t)ftime.dwHighDateTime) << 32);
 
-  sec  = (long)((time - epoch) / 10000000L);
+  sec = (long)((time - epoch) / 10000000L);
   usec = (long)(stime.wMilliseconds * 1000);
 
   if (usec < 0 || usec > 999999)
