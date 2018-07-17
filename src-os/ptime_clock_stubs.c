@@ -77,7 +77,7 @@ if (now.tv_nsec < 0 || now.tv_nsec > 999999999)
   CAMLreturn (pair);
 }
 
-#elif defined(OCAML_PTIME_DARWIN) || defined(OCAML_PTIME_WIN)
+#elif defined(OCAML_PTIME_DARWIN)
 
 CAMLprim value ocaml_ptime_clock_now_d_ps (value unit)
 {
@@ -108,6 +108,45 @@ CAMLprim value ocaml_ptime_clock_now_d_ps (value unit)
                /* Given the above checks, in the right range for Ptime */
                caml_copy_int64 ((now.tv_sec % 86400) * 1000000000000L +
                                 (now.tv_usec * 1000000L)));
+  CAMLreturn (pair);
+}
+
+#elif defined(OCAML_PTIME_WIN)
+
+CAMLprim value ocaml_ptime_clock_now_d_ps (value unit)
+{
+  CAMLparam1 (unit);
+  CAMLlocal1 (pair);
+  long sec, usec;
+  SYSTEMTIME stime;
+  FILETIME ftime;
+  uint64_t time;
+
+  static const uint64_t epoch = ((uint64_t)116444736000000000ULL);
+
+  GetSystemTime (&stime);
+  SystemTimeToFileTime (&stime, &ftime);
+  time = ((uint64_t)ftime.dwLowDateTime) +
+         (((uint64_t)ftime.dwHighDateTime) << 32);
+
+  sec  = (long)((time - epoch) / 10000000L);
+  usec = (long)(stime.wMilliseconds * 1000);
+
+  if (usec < 0 || usec > 999999)
+    OCAML_PTIME_RAISE_SYS_ERROR ("unreasonable usec in timeval");
+
+  if (sec < 0)
+    OCAML_PTIME_RAISE_SYS_ERROR ("negative sec in timeval");
+
+  int d = sec / 86400;
+  if (d > OCAML_PTIME_DAY_MAX)
+    OCAML_PTIME_RAISE_SYS_ERROR ("can't represent timeval in Ptime.t");
+
+  pair = caml_alloc (2, 0);
+  Store_field (pair, 0, Val_int (d));
+  Store_field (pair, 1,
+               caml_copy_int64 ((sec % 86400) * 1000000000000L +
+                                (usec * 1000000L)));
   CAMLreturn (pair);
 }
 
