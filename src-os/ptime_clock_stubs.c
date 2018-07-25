@@ -119,16 +119,16 @@ CAMLprim value ocaml_ptime_clock_now_d_ps (value unit)
   long sec, usec;
   SYSTEMTIME stime;
   FILETIME ftime;
-  uint64_t time;
+  ULARGE_INTEGER time;
 
   static const uint64_t epoch = ((uint64_t)116444736000000000ULL);
 
   GetSystemTime (&stime);
   SystemTimeToFileTime (&stime, &ftime);
-  time = ((uint64_t)ftime.dwLowDateTime) +
-         (((uint64_t)ftime.dwHighDateTime) << 32);
+  time.LowPart = ftime.dwLowDateTime;
+  time.HighPart = ftime.dwHighDateTime;
 
-  sec = (long)((time - epoch) / 10000000L);
+  sec = (long)((time.QuadPart - epoch) / 10000000L);
   usec = (long)(stime.wMilliseconds * 1000);
 
   if (usec < 0 || usec > 999999)
