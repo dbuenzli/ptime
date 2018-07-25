@@ -51,7 +51,7 @@ CAMLprim value ocaml_ptime_clock_now_d_ps (value unit)
   /* Make sure to return valid Ptime.t values. */
 
   /* We only handle valid timespec structs as per POSIX def (§2.8.5 in 2013) */
-if (now.tv_nsec < 0 || now.tv_nsec > 999999999)
+  if (now.tv_nsec < 0 || now.tv_nsec > 999999999)
     OCAML_PTIME_RAISE_SYS_ERROR ("invalid tv_nsec in timespec");
 
   /* To make it easier, we do not lie, this can't possibly be now.
