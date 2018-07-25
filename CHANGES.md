@@ -2,7 +2,8 @@
 * Fix `Ptime.frac_s` on pre-epoch time stamps. The function computed a
   span of `1s - f` instead of `f` on these.  This function is not used
   internally so this only affects users of this function that apply it
-  on pre-epoch time stamps (#12).
+  on pre-epoch time stamps (#12). Thanks to David Kaloper Meršinjak
+  for the report.
 
 v0.8.3 2017-02-05 La Forclaz (VS)
 ---------------------------------
