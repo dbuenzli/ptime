@@ -252,6 +252,9 @@ CAMLprim value ocaml_ptime_clock_current_tz_offset_s (value unit)
   }
 
   some = caml_alloc (1, 0);
+  /* Note that on Windows 'bias' is defined as (UTC - localtime),
+   * while ptime uses (localtime - UTC)
+   */
   Store_field (some, 0, Val_int (-bias * 60));
   CAMLreturn(some);
 }
