@@ -139,9 +139,11 @@ module Span : sig
   (** {1:print Pretty printing} *)
 
   val pp : Format.formatter -> span -> unit
-  (** [pp ppf d] prints an unspecified representation of [d] on
-      [ppf].  The representation is not fixed-width, depends on the
-      magnitude of [d] and uses locale independent
+  (** [pp ppf d] prints an unspecified, approximative, representation of [d]
+      on [ppf].
+
+      The representation is not fixed-width, depends on the magnitude of [d]
+      and uses locale independent
       {{:http://www.bipm.org/en/publications/si-brochure/chapter3.html}SI
       prefixes} on seconds and
       {{:http://www.bipm.org/en/publications/si-brochure/table6.html}accepted
@@ -149,6 +151,11 @@ module Span : sig
       SI-accepted days) as
       {{:http://www.iau.org/publications/proceedings_rules/units/}defined}
       by the International Astronomical Union (IUA).
+
+      The representation is approximative. In particular beyond 60
+      seconds it only keeps the two most significant time units and
+      rounds towards the infinity. The latter means that case arising,
+      it always {e over} approximates durations.
 
       {b Warning} Becomes unprecise (but does not overflow) if the
       absolute number of POSIX days in the time span is greater than [max_int /
