@@ -1,4 +1,5 @@
-
+v0.8.4 2018-07-26 Zagreb
+------------------------
 
 * `Ptime_clock`: Windows support. Thanks to IndiscriminateCoding
   and David Allsopp for the contribution.
