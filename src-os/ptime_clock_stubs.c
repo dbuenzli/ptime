@@ -126,7 +126,7 @@ CAMLprim value ocaml_ptime_clock_now_d_ps (value unit)
   time.LowPart = ftime.dwLowDateTime;
   time.HighPart = ftime.dwHighDateTime;
 
-#define EPOCH (116444736000000000)
+#define EPOCH (116444736000000000ULL)
   sec = (long)((time.QuadPart - EPOCH) / 10000000L);
 #undef EPOCH
   usec = (long)(stime.wMilliseconds * 1000);
