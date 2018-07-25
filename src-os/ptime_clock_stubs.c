@@ -1,5 +1,5 @@
 /*---------------------------------------------------------------------------
-   Copyright (c) 2015 Daniel C. Bünzli. All rights reserved.
+   Copyright (c) 2015 The ptime programmers. All rights reserved.
    Distributed under the ISC license, see license at the end of the file.
    %%NAME%% release %%VERSION%%
    --------------------------------------------------------------------------*/
@@ -194,7 +194,7 @@ CAMLprim value ocaml_ptime_clock_current_tz_offset_s (value unit)
 #endif
 
 /*---------------------------------------------------------------------------
-   Copyright (c) 2014 Daniel C. Bünzli
+   Copyright (c) 2014 The ptime programmers
 
    Permission to use, copy, modify, and/or distribute this software for any
    purpose with or without fee is hereby granted, provided that the above
