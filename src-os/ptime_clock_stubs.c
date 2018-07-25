@@ -121,14 +121,14 @@ CAMLprim value ocaml_ptime_clock_now_d_ps (value unit)
   FILETIME ftime;
   ULARGE_INTEGER time;
 
-  static const uint64_t epoch = ((uint64_t)116444736000000000ULL);
-
   GetSystemTime (&stime);
   SystemTimeToFileTime (&stime, &ftime);
   time.LowPart = ftime.dwLowDateTime;
   time.HighPart = ftime.dwHighDateTime;
 
-  sec = (long)((time.QuadPart - epoch) / 10000000L);
+#define EPOCH (116444736000000000)
+  sec = (long)((time.QuadPart - EPOCH) / 10000000L);
+#undef EPOCH
   usec = (long)(stime.wMilliseconds * 1000);
 
   if (usec < 0 || usec > 999999)
