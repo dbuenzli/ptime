@@ -70,13 +70,17 @@ val period_d_ps : unit -> (int * int64) option
 
     {ul
     {- Platforms with a POSIX clock (includes Linux) use
-       {{:http://pubs.opengroup.org/onlinepubs/9699919799/functions/clock_gettime.html}clock_gettime} with [CLOCK_REALTIME].}
+       {{:http://pubs.opengroup.org/onlinepubs/9699919799/functions/clock_gettime.html}[clock_gettime]} with [CLOCK_REALTIME].}
     {- On Darwin {{:http://pubs.opengroup.org/onlinepubs/9699919799/}
                   [gettimeofday]} is used.}
-    {- On Windows this is currently unimplemented.}
+    {- On Windows
+       {{:https://msdn.microsoft.com/en-us/library/windows/desktop/ms724390(v=vs.85).aspx}[GetSystemTime]}
+       and
+       {{:https://msdn.microsoft.com/en-us/library/windows/desktop/ms724421(v=vs.85).aspx}[GetTimeZoneInformation]}
+       are used.}
     {- On JavaScript
-       {{:http://www.ecma-international.org/ecma-262/6.0/index.html#sec-date.now}Date.now ()} and
-       {{:http://www.ecma-international.org/ecma-262/6.0/index.html#sec-date.prototype.gettimezoneoffset}Date.prototype.getTimezoneOffset} are used.}} *)
+       {{:http://www.ecma-international.org/ecma-262/6.0/index.html#sec-date.now}[Date.now ()]} and
+       {{:http://www.ecma-international.org/ecma-262/6.0/index.html#sec-date.prototype.gettimezoneoffset}[Date.prototype.getTimezoneOffset]} are used.}} *)
 
 (*---------------------------------------------------------------------------
    Copyright (c) 2015 The ptime programmers
