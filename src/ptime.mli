@@ -218,7 +218,11 @@ val of_float_s : float -> t option
 
 val to_float_s : t -> float
 (** [to_float_s t] is like {!to_span} but returns a floating point second
-    POSIX span. *)
+    POSIX span.
+
+    {b Warning.} Due to floating point inaccuracies do not expect the
+    function to round trip with {!of_float_s}; especially near
+    {!Ptime.min} and {!Ptime.max}. *)
 
 val truncate : frac_s:int -> t -> t
 (** [truncate ~frac_s t] is [t] truncated to the [frac_s] decimal
