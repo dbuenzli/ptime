@@ -3,6 +3,7 @@
    Distributed under the ISC license, see terms at the end of the file.
    %%NAME%% %%VERSION%%
   ---------------------------------------------------------------------------*)
+open Js_of_ocaml
 
 let str = Printf.sprintf
 
