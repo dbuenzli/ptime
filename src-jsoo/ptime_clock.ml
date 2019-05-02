@@ -4,6 +4,8 @@
    %%NAME%% %%VERSION%%
   ---------------------------------------------------------------------------*)
 
+open Js_of_ocaml
+
 let str = Printf.sprintf
 
 (* JavaScript values *)

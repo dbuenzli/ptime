@@ -1,3 +1,9 @@
+
+
+
+* Make the package compatible with `js_of_ocaml` 3.3.0's
+  namespacing
+
 v0.8.4 2018-07-26 Zagreb
 ------------------------
 

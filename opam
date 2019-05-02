@@ -15,6 +15,7 @@ depends: [
  "result"
 ]
 depopts: [ "js_of_ocaml" ]
+conflicts: [ "js_of_ocaml" { < "3.3.0" } ]
 build:[[
    "ocaml" "pkg/pkg.ml" "build"
    "--pinned" "%{pinned}%"
