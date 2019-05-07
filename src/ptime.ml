@@ -201,6 +201,9 @@ module Span = struct
     let tps = Int64.(sub ps (rem ps frac_div.(frac))) in
     if sign < 0 then neg (d, tps) else (d, tps)
 
+  let truncate_down ~frac_s:frac (d, ps) =
+    (d, Int64.(sub ps (rem ps frac_div.(frac ))))
+
   (* Pretty printing *)
 
   let dump ppf (d, ps) = Format.fprintf ppf "@[<1>(%d,@,%Ld)@]" d ps
@@ -326,7 +329,7 @@ let of_float_s secs = match Span.of_float_s secs with
 
 let to_float_s = Span.to_float_s
 
-let truncate = Span.truncate
+let truncate = Span.truncate_down
 
 let frac_s (_, ps) = (0, Int64.(rem ps ps_count_in_s))
 
