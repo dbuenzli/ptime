@@ -1,5 +1,7 @@
 true : bin_annot, safe_string, package(result)
 
+<_b0> : -traverse
+
 # Ideally we should get rid of this.
 <src> : include
 
