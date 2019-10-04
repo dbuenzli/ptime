@@ -1,6 +1,6 @@
 description = "POSIX time for OCaml"
 version = "%%VERSION_NUM%%"
-requires = "result"
+requires = ""
 archive(byte) = "ptime.cma"
 archive(native) = "ptime.cmxa"
 plugin(byte) = "ptime.cma"
