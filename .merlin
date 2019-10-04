@@ -1,7 +1,9 @@
 PKG result js_of_ocaml
 S src
-S src-os
-S src-jsoo
+S src-clock
+S src-clock/jsoo
+S src-clock/os
+S src-top
 S test
 S test-os
 S test-jsoo
