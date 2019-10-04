@@ -13,7 +13,7 @@ clock and to the system's current time zone offset.
 
 Ptime is not a calendar library.
 
-Ptime depends on the `result` compatibility package. Ptime_clock
+Ptime does not depend on any package. Ptime_clock
 depends on your system library. Ptime_clock's optional JavaScript
 support depends on [js_of_ocaml][jsoo]. Ptime and its libraries are
 distributed under the ISC license.
