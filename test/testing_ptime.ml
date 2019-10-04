@@ -6,6 +6,8 @@
 
 open Testing
 
+let stdlib_float = float
+
 let unit ppf () = Format.fprintf ppf "()"
 let float ppf f = Format.fprintf ppf "%.10f" f
 let int64 ppf i = Format.fprintf ppf "%Ld" i

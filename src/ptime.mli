@@ -86,7 +86,7 @@ module Span : sig
       second span [d]. Subpicosecond precision numbers are truncated.
 
       [None] is returned if [secs] cannot be represented as a span.
-      This occurs on {!Pervasives.nan} or if the duration in POSIX
+      This occurs on {!Stdlib.nan} or if the duration in POSIX
       days cannot fit on an [int] (on 32-bit platforms this means the
       absolute magnitude of the duration is greater than ~2'941'758
       years). *)

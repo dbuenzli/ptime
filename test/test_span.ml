@@ -54,8 +54,8 @@ let conversions = test "Constants and conversions" @@ fun () ->
   trip_float (-0.);
   trip_float 1.;
   trip_float (-1.);
-  trip_float (Pervasives.float (1 lsl 30 - 1));
-  trip_float (Pervasives.float (- (1 lsl 30)));
+  trip_float (stdlib_float (1 lsl 30 - 1));
+  trip_float (stdlib_float (- (1 lsl 30)));
   eq_span_opt (Ptime.Span.of_d_ps (23, -1L)) None;
   eq_span_opt (Ptime.Span.of_d_ps (23, 86_400_000_000_000_000L)) None;
   ()

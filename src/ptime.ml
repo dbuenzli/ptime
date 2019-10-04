@@ -91,6 +91,8 @@ type span = t
 
 module Span = struct
 
+  let stdlib_abs = abs
+
   (* Arithmetic *)
 
   let neg = function
@@ -123,7 +125,7 @@ module Span = struct
   let to_d_ps s = s
 
   let of_int_s secs =
-    let d = Pervasives.abs secs in
+    let d = stdlib_abs secs in
     let s = (d / 86_400, Int64.(mul (of_int (d mod 86_400)) ps_count_in_s)) in
     if secs < 0 then neg s else s
 
@@ -159,12 +161,12 @@ module Span = struct
   (* Predicates *)
 
   let equal (d0, ps0) (d1, ps1) =
-    (Pervasives.compare : int -> int -> int) d0 d1 = 0 &&
+    (compare : int -> int -> int) d0 d1 = 0 &&
     Int64.compare ps0 ps1 = 0
 
   let compare (d0, ps0) (d1, ps1) =
-    let c = Pervasives.compare d0 d1 in
-    if c <> 0 then c else Pervasives.compare ps0 ps1
+    let c = (compare : int -> int -> int) d0 d1 in
+    if c <> 0 then c else (compare : int64 -> int64 -> int) ps0 ps1
 
   (* Rounding *)
 
