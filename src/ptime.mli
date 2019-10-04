@@ -49,7 +49,7 @@ module Span : sig
   (** The type for signed, picosecond precision, POSIX time spans. *)
 
   val v : int * int64 -> span
-  (** [v s] is like {!of_d_ps}[ s] but @raise Invalid_argument if
+  (** [v s] is like {!of_d_ps}[ s] but raises [Invalid_argument] if
       [s] is not in the right range. Use {!of_d_ps} to deal with
       untrusted input. *)
 
@@ -174,7 +174,7 @@ type t
     this type, are by definition always on the UTC timeline. *)
 
 val v : int * int64 -> t
-(** [v s] is [of_span (Span.v s)] but @raise Invalid_argument if [s]
+(** [v s] is [of_span (Span.v s)] but raise [Invalid_argument] if [s]
     is not in the right range. Use {!Span.of_d_ps} and {!of_span}
     to deal with untrusted input. *)
 
