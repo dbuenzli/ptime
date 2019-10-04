@@ -4,7 +4,6 @@
    %%NAME%% %%VERSION%%
   ---------------------------------------------------------------------------*)
 
-open Result
 open Testing
 open Testing_ptime
 

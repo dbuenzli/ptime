@@ -4,8 +4,6 @@
    %%NAME%% %%VERSION%%
   ---------------------------------------------------------------------------*)
 
-open Result
-
 (* {1 Value equality and pretty printing} *)
 
 type 'a eq = 'a -> 'a -> bool

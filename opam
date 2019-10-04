@@ -8,11 +8,10 @@ bug-reports: "https://github.com/dbuenzli/ptime/issues"
 tags: [ "time" "posix" "system" "org:erratique" ]
 license: "ISC"
 depends: [
- "ocaml" {>= "4.01.0"}
+ "ocaml" {>= "4.03.0"}
  "ocamlfind" {build}
  "ocamlbuild" {build}
  "topkg" {build}
- "result"
 ]
 depopts: [ "js_of_ocaml" ]
 conflicts: [ "js_of_ocaml" { < "3.3.0" } ]

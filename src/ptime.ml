@@ -4,8 +4,6 @@
    %%NAME%% %%VERSION%%
   ---------------------------------------------------------------------------*)
 
-open Result
-
 (* Julian day and proleptic Gregorian calendar date conversion.
 
    Formulae are from the calendar FAQ:

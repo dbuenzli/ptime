@@ -1,11 +1,12 @@
 
-
-* Alter install structure ptime/{os,jsoo} are now installed
-  in `ptime/clock/{os,jsoo}`. Also a `ptime_clock.cm[t]i is 
-  now installed in `ptime/clock/`. The `ocamlfind` package
+* Require OCaml >= 4.03
+* Drop dependency on `result` compatibility package.
+* Alter install structure. `ptime/{os,jsoo}` are now installed
+  in `ptime/clock/{os,jsoo}`. Also a `ptime_clock.cm[t]i` is 
+  now installed in `ptime/clock/`. The `ocamlfind` packages
   are unchanged except for `ptime.clock.os.top` which no
   longer exists.
-* Handle Pervasives deprecation.
+* Handle `Pervasives` deprecation.
 
 v0.8.5 2019-05-02 La Forclaz (VS)
 ---------------------------------

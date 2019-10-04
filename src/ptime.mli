@@ -28,8 +28,6 @@
 
     {e %%VERSION%% - {{:%%PKG_HOMEPAGE%% }homepage}} *)
 
-open Result
-
 (** {1:timespans POSIX time spans} *)
 
 type span
