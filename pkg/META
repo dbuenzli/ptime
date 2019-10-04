@@ -7,6 +7,7 @@ plugin(byte) = "ptime.cma"
 plugin(native) = "ptime.cmxs"
 
 package "top" (
+  directory="top"
   description = "Ptime toplevel support"
   version = "%%VERSION_NUM%%"
   requires = "ptime"
@@ -20,6 +21,7 @@ package "clock" (
   description = "POSIX time clocks"
   version = "%%VERSION_NUM%%"
   requires = ""
+  directory = "clock"
 
   package "os" (
     directory="os"
@@ -30,17 +32,7 @@ package "clock" (
     archive(native) = "ptime_clock.cmxa"
     plugin(byte) = "ptime_clock.cma"
     plugin(native) = "ptime_clock.cmxs"
-    exists_if = "ptime_clock.cma"
-
-    package "top" (
-      description = "Ptime_clock native OS toplevel support"
-      version = "%%VERSION_NUM%%"
-      requires = "ptime.top ptime.clock.os"
-      archive(byte) = "ptime_clock_top.cma"
-      archive(native) = "ptime_clock_top.cmxa"
-      plugin(byte) = "ptime_clock_top.cma"
-      plugin(native) = "ptime_clock_top.cmxs"
-      exists_if = "ptime_clock_top.cma"))
+    exists_if = "ptime_clock.cma")
 
   package "jsoo" (
     directory="jsoo"

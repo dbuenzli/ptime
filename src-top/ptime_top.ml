@@ -4,7 +4,7 @@
    %%NAME%% %%VERSION%%
   ---------------------------------------------------------------------------*)
 
-let () = ignore (Toploop.use_file Format.err_formatter "ptime_top_init.ml")
+let () = ignore (Toploop.use_file Format.err_formatter "../ptime_top_init.ml")
 
 (*---------------------------------------------------------------------------
    Copyright (c) 2015 The ptime programmers

@@ -9,12 +9,12 @@ let () =
   Pkg.describe "ptime" @@ fun c ->
   let jsoo = Conf.value c jsoo in
   Ok [ Pkg.mllib "src/ptime.mllib";
-       Pkg.mllib ~api:[] "src/ptime_top.mllib";
        Pkg.lib "src/ptime_top_init.ml";
-       Pkg.mllib "src-os/ptime_clock.mllib" ~dst_dir:"os/";
-       Pkg.clib "src-os/libptime_clock_stubs.clib" ~lib_dst_dir:"os/";
-       Pkg.mllib ~api:[] "src-os/ptime_clock_top.mllib" ~dst_dir:"os/";
-       Pkg.mllib ~cond:jsoo "src-jsoo/ptime_clock.mllib" ~dst_dir:"jsoo/";
+       Pkg.mllib ~api:[] "src-top/ptime_top.mllib" ~dst_dir:"top/";
+       Pkg.lib ~exts:Exts.interface "src-clock/ptime_clock" ~dst:"clock/";
+       Pkg.mllib "src-clock/os/ptime_clock.mllib" ~dst_dir:"clock/os/";
+       Pkg.clib "src-clock/os/libptime_clock_stubs.clib" ~lib_dst_dir:"clock/os/";
+       Pkg.mllib ~cond:jsoo "src-clock/jsoo/ptime_clock.mllib" ~dst_dir:"clock/jsoo/";
        Pkg.test "test/test";
        Pkg.test "test/test_unix";
        Pkg.test "test/basics";
