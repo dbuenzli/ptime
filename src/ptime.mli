@@ -6,16 +6,6 @@
 
 (** POSIX time values.
 
-    {!Ptime} has platform independent support for POSIX time. It
-    provides a {{!t}type} to represent a well-defined range of POSIX
-    timestamps with picosecond precision, conversion with
-    {{!date_time}date-time values}, conversion with {{!rfc3339}RFC
-    3339 timestamps} and {{!print}pretty printing} to a
-    human-readable, locale-independent representation.
-
-    {!Ptime_clock} provides access to a system POSIX clock and the system's
-    current time zone offset. {!Ptime} is not a calendar library.
-
     Consult the {{!basics}basics} and a few {{!notes}notes
     and limitations}.
 
@@ -24,9 +14,7 @@
     {- The Open Group. {{:http://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap04.html#tag_04_15}The Open Group Base Specifications Issue 7, section 4.15 Seconds Since the Epoch}. 2013}
     {- G. Klyne et al.
     {{:http://tools.ietf.org/html/rfc3339}
-    {e Date and Time on the Internet: Timestamps}}. RFC 3339, 2002.}}
-
-    {e %%VERSION%% - {{:%%PKG_HOMEPAGE%% }homepage}} *)
+    {e Date and Time on the Internet: Timestamps}}. RFC 3339, 2002.}} *)
 
 (** {1:timespans POSIX time spans} *)
 

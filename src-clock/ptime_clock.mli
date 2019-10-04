@@ -14,9 +14,7 @@
     wall-clock time to measure time spans.
 
     Consult important information about {{!err}error handling}
-    and {{!platform_support}platform support}.
-
-    {e %%VERSION%% - {{:%%PKG_HOMEPAGE%% }homepage}} *)
+    and {{!platform_support}platform support}. *)
 
 (** {1:clock POSIX clock} *)
 
