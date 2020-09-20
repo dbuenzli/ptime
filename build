@@ -35,7 +35,7 @@ action ()
             if [ "$1" = "-b" ]; then
                 topkg browse \
                 "http://localhost/ptime/test-jsoo/min_clock_jsoo.html"
-            fiOA
+            fi
             ;;
         doc)     shift; topkg doc --dev $* ;;
         api-doc) shift; topkg doc $* ;;
