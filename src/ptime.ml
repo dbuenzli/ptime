@@ -453,6 +453,37 @@ let weekday =
     let i = d mod 7 in
     wday.(if i < 0 then 7 + i else i)
 
+let weekday_to_string = function
+  | `Thu -> "Thu"
+  | `Fri -> "Fri"
+  | `Sat -> "Sat"
+  | `Sun -> "Sun"
+  | `Mon -> "Mon"
+  | `Tue -> "Tue"
+  | `Wed -> "Wed"
+
+let month =
+  let mnth =
+    [| `Jan; `Feb; `Mar; `Apr; `May; `Jun; `Jul; `Aug; `Sep; `Oct; `Nov; `Dec |]
+  in
+  fun ?(tz_offset_s = 0) t ->
+    let _, m, _ = to_date (Span.add t (Span.of_int_s tz_offset_s)) in
+    mnth.(m + 1)
+
+let month_to_string = function
+  | `Jan -> "Jan"
+  | `Feb -> "Feb"
+  | `Mar -> "Mar"
+  | `Apr -> "Apr"
+  | `May -> "May"
+  | `Jun -> "Jun"
+  | `Jul -> "Jul"
+  | `Aug -> "Aug"
+  | `Sep -> "Sep"
+  | `Oct -> "Oct"
+  | `Nov -> "Nov"
+  | `Dec -> "Dec"
+
 (* RFC 3339 timestamp conversions *)
 
 (* RFC 3339 timestamp parser *)
@@ -621,6 +652,29 @@ let rfc3339_adjust_tz_offset tz_offset_s =
 
 let s_frac_of_ps frac ps =
   Int64.(div (rem ps ps_count_in_s) Span.frac_div.(frac))
+
+let to_rfc1123 ?(space = false) ?frac_s:(frac = 0) ?tz_offset_s ((_, ps) as t) =
+  let buf = Buffer.create 40 in
+  let tz_offset_s, tz_unknown =
+    match tz_offset_s with
+    | Some tz -> rfc3339_adjust_tz_offset tz
+    | None -> (0, true)
+  in
+  let (y, m, d), ((hh, ss, mm), tz_offset_s) = to_date_time ~tz_offset_s t in
+  let wday = weekday t in
+  let month = month t in
+  Printf.bprintf buf "%03s, %02d %03s %04d %02d:%02d:%02d"
+    (weekday_to_string wday) d (month_to_string month) y hh ss mm;
+  let frac = if frac < 0 then 0 else if frac > 12 then 12 else frac in
+  if frac <> 0 then Printf.bprintf buf ".%0*Ld" frac (s_frac_of_ps frac ps);
+  ( if tz_offset_s = 0 && not tz_unknown then Printf.bprintf buf "Z"
+  else
+    let tz_sign = if tz_offset_s < 0 || tz_unknown then '-' else '+' in
+    let tz_min = abs (tz_offset_s / 60) in
+    let tz_hh = tz_min / 60 in
+    let tz_mm = tz_min mod 60 in
+    Printf.bprintf buf "%c%02d:%02d" tz_sign tz_hh tz_mm );
+  Buffer.contents buf
 
 let to_rfc3339 ?(space = false) ?frac_s:(frac = 0) ?tz_offset_s (_, ps as t) =
   let buf = Buffer.create 255 in
