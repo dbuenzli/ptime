@@ -309,6 +309,10 @@ type time = (int * int * int) * tz_offset_s
     A [time] value is said to be {e valid} iff the values [(hh, mm, ss)]
     are in the ranges mentioned above. *)
 
+val max_month_day : int -> int -> int
+(** [max_month_day year month] is the last day of the given [month] of
+   [year]. It can be 31, 30, 29 or 28. *)
+
 val of_date_time : date * time -> t option
 (** [of_date_time dt] is the POSIX timestamp corresponding to
     date-time [dt] or [None] if [dt] has an {{!date}invalid date},
