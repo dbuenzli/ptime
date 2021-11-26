@@ -7,6 +7,9 @@ let system_support_lib = match os with
 | "Linux\n" -> [A "-cclib"; A "-lrt"]
 | _ -> []
 
+let lib_a = Ocamlbuild_pack.Ocamlbuild_config.a
+let clock_stubs_lib = "src-clock/os/libptime_clock_stubs." ^ lib_a
+
 let js_rule () =
   let dep = "%.byte" in
   let prod = "%.js" in
@@ -31,10 +34,10 @@ let () =
       (* ptime_clock_os *)
 
       flag_and_dep ["link"; "ocaml"; "link_ptime_clock_os_stubs"]
-        (A "src-clock/os/libptime_clock_stubs.a");
+        (A clock_stubs_lib);
 
       dep ["record_ptime_clock_os_stubs"]
-        ["src-clock/os/libptime_clock_stubs.a"];
+        [clock_stubs_lib];
 
       flag ["library"; "ocaml"; "byte"; "record_ptime_clock_os_stubs"]
         (S ([A "-dllib"; A "-lptime_clock_stubs"] @ system_support_lib));
