@@ -9,11 +9,7 @@
 * Handle `Pervasives` deprecation.
 * Fix `Ptime.truncate` to always truncate down. Thanks
   to David Kaloper Meršinjak for the report & fix.
-
-v0.8.6 2021-11-26 Jonah Beckford
---------------------------------
-
-* Allow compiling with MSVC compiler
+* Allow compiling with MSVC compiler. Jonah Beckford
 
 v0.8.5 2019-05-02 La Forclaz (VS)
 ---------------------------------
