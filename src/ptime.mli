@@ -484,9 +484,9 @@ val dump : Format.formatter -> t -> unit
 
 (** {1:basics Basics}
 
-    POSIX time counts {{!posix_seconds}POSIX seconds} since the epoch
-    1970-01-01 00:00:00 UTC. As such a POSIX timestamp is {b always}
-    on the UTC timeline.
+    POSIX time counts POSIX seconds since the epoch 1970-01-01
+    00:00:00 UTC. As such a POSIX timestamp is {b always} on the UTC
+    timeline.
 
     POSIX time doesn't count leap seconds, so by definition it cannot
     represent them. One way of viewing this is that whenever a leap
