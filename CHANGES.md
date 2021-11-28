@@ -1,16 +1,17 @@
+v0.8.6 2021-11-28 Zagreb
+------------------------
 
 * Require OCaml >= 4.03
 * Drop dependency on `result` compatibility package.
-* Alter install structure. `ptime/{os,jsoo}` are now installed
-  in `ptime/clock/{os,jsoo}`. Also a `ptime_clock.cm[t]i` is 
-  now installed in `ptime/clock/`. The `ocamlfind` packages
-  are unchanged except for `ptime.clock.os.top` which no
-  longer exists.
+* Alter install structure. `ptime/{os,jsoo}` are now installed in
+  `ptime/clock/{os,jsoo}`. Also a `ptime_clock.cm[t]i` is now
+  installed in `ptime/clock/`. The `ocamlfind` packages are unchanged
+  except for `ptime.clock.os.top` which no longer exists.
 * Handle `Pervasives` deprecation.
-* Fix `Ptime.truncate` to always truncate down. Thanks
-  to David Kaloper Meršinjak for the report & fix.
-* Allow compiling with MSVC compiler. Thanks to 
-  Jonah Beckford for the patch.
+* Fix `Ptime.truncate` to always truncate down. Thanks to David
+  Kaloper Meršinjak for the report & fix.
+* Allow compiling with MSVC compiler. Thanks to Jonah Beckford for the
+  patch.
 
 v0.8.5 2019-05-02 La Forclaz (VS)
 ---------------------------------
