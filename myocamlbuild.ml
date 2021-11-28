@@ -36,24 +36,24 @@ let () =
       (* ptime_clock_os *)
 
       flag_and_dep ["link"; "ocaml"; "link_ptime_clock_os_stubs"]
-        (A (lib "src-clock/os/libptime_clock_stubs"));
+        (A (lib "src-os/libptime_clock_stubs"));
 
       dep ["record_ptime_clock_os_stubs"]
-        [lib "src-clock/os/libptime_clock_stubs"];
+        [lib "src-os/libptime_clock_stubs"];
 
       flag ["library"; "ocaml"; "byte"; "record_ptime_clock_os_stubs"]
         (S ([A "-dllib"; A "-lptime_clock_stubs"] @ system_support_lib));
       flag ["library"; "ocaml"; "record_ptime_clock_os_stubs"] (* byt + nat *)
         (S ([A "-cclib"; A "-lptime_clock_stubs"] @ system_support_lib));
 
-      ocaml_lib ~tag_name:"use_ptime_clock_os" ~dir:"src-clock/os"
-        "src-clock/os/ptime_clock";
+      ocaml_lib ~tag_name:"use_ptime_clock_os" ~dir:"src-os"
+        "src-os/ptime_clock";
       flag ["link"; "ocaml"; "use_ptime_clock_os"]
-        (S [A "-ccopt"; A "-Lsrc-clock/os"]);
+        (S [A "-ccopt"; A "-Lsrc-os"]);
 
       (* ptime_clock_jsoo *)
 
-      ocaml_lib ~tag_name:"use_ptime_clock_jsoo" ~dir:"src-clock-jsoo"
-        "src-clock/jsoo/ptime_clock";
+      ocaml_lib ~tag_name:"use_ptime_clock_jsoo" ~dir:"src-jsoo"
+        "src-jsoo/ptime_clock";
   | _ -> ()
   end

@@ -1,9 +1,7 @@
-PKG result js_of_ocaml
+PKG B0.kit js_of_ocaml
 S src
-S src-clock
-S src-clock/jsoo
-S src-clock/os
-S src-top
+S src-jsoo
+S src-os
 S test
 S test-os
 S test-jsoo
