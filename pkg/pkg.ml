@@ -10,7 +10,7 @@ let () =
   let jsoo = Conf.value c jsoo in
   Ok [ Pkg.mllib "src/ptime.mllib";
        Pkg.lib "src/ptime_top_init.ml";
-       Pkg.mllib ~api:[] "src-top/ptime_top.mllib" ~dst_dir:"top/";
+       Pkg.mllib ~api:[] "src/ptime_top.mllib" ~dst_dir:"top/";
        Pkg.lib ~exts:Exts.interface "src/ptime_clock" ~dst:"clock/";
        Pkg.mllib "src-os/ptime_clock.mllib" ~dst_dir:"clock/os/";
        Pkg.clib "src-os/libptime_clock_stubs.clib" ~lib_dst_dir:"clock/os/";
