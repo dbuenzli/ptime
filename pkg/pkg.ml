@@ -14,6 +14,7 @@ let () =
        Pkg.lib ~exts:Exts.interface "src/ptime_clock" ~dst:"clock/";
        Pkg.mllib "src-os/ptime_clock.mllib" ~dst_dir:"clock/os/";
        Pkg.clib "src-os/libptime_clock_stubs.clib" ~lib_dst_dir:"clock/os/";
+       Pkg.lib "src-os/runtime.js" ~dst:"clock/os/";
        Pkg.mllib ~cond:jsoo "src-jsoo/ptime_clock.mllib" ~dst_dir:"clock/jsoo/";
        Pkg.test "test/test";
        Pkg.test "test/test_unix";
