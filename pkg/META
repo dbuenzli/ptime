@@ -32,6 +32,7 @@ package "clock" (
     archive(native) = "ptime_clock.cmxa"
     plugin(byte) = "ptime_clock.cma"
     plugin(native) = "ptime_clock.cmxs"
+    linkopts(javascript) = "+ptime.clock.os/runtime.js"
     exists_if = "ptime_clock.cma")
 
   package "jsoo" (
