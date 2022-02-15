@@ -1,8 +1,5 @@
-PKG B0.kit js_of_ocaml
+PKG b0.kit
 S src
-S src-jsoo
-S src-os
+S src-clock
 S test
-S test-os
-S test-jsoo
-B _build/**
+B _b0/**

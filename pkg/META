@@ -18,14 +18,14 @@ package "top" (
 )
 
 package "clock" (
-  description = "POSIX time clocks"
+  description = "POSIX time clock interface"
   version = "%%VERSION_NUM%%"
   requires = ""
   directory = "clock"
 
   package "os" (
     directory="os"
-    description = "Ptime_clock for native OS"
+    description = "Ptime_clock for your platform (including JavaScript)"
     version = "%%VERSION_NUM%%"
     requires = "ptime"
     archive(byte) = "ptime_clock.cma"
@@ -36,14 +36,11 @@ package "clock" (
     exists_if = "ptime_clock.cma")
 
   package "jsoo" (
-    directory="jsoo"
-    description = "Ptime_clock for js_of_ocaml"
+    warning =
+      "Deprecated. Use ptime.clock.os instead (includes JavaScript support)."
+    description = "Deprecated use ptime.clock.os"
     version = "%%VERSION_NUM%%"
-    requires = "js_of_ocaml ptime"
-    archive(byte) = "ptime_clock.cma"
-    plugin(byte) = "ptime_clock.cma"
-    archive(native) = "ptime_clock.cmxa"
-    plugin(native) = "ptime_clock.cmxs"
-    exists_if = "ptime_clock.cma"
+    requires = "ptime.clock.os"
+    directory="jsoo"
   )
 )

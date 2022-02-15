@@ -8,12 +8,16 @@ timestamps with picosecond precision, conversion with
 printing} to a human-readable, locale-independent
 representation. {!Ptime} is not a calendar library.
 
-{!Ptime_clock} provides access to a system POSIX clock and the system's
+{!Ptime_clock} provides access to a
+{{!Ptime_clock.platform_support}system POSIX clock} and the system's
 current time zone offset.
 
-{1:api API}
+{1:ptime Library [ptime]}
 
-{!modules:
-Ptime
-Ptime_clock
-}
+{!modules: Ptime}
+
+{1:ptime_clock Library [ptime.clock.os]}
+
+{!modules: Ptime_clock}
+
+Also use this library for compiling to JavaScript.

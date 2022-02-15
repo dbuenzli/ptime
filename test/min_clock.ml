@@ -1,14 +1,16 @@
 (*
    Compile with:
 
-   ocamlfind ocamlc \
-     -package ptime.clock.os -linkpkg -o min_clock_os.byte min_clock_os.ml
    ocamlfind ocamlopt \
-     -package ptime.clock.os -linkpkg -o min_clock_os.native min_clock_os.ml
+     -package ptime.clock.os -linkpkg -o min_clock.native min_clock.ml
+
+   ocamlfind ocamlc \
+     -package ptime.clock.os -linkpkg -o min_clock.byte min_clock.ml
+
    js_of_ocaml \
-     $(ocamlfind query ptime.clock.os -predicates javascript -o-format -r | xargs echo) \
-     min_clock_os.byte
- *)
+     $(ocamlfind query ptime.clock.os -predicates javascript -o-format -r) \
+     min_clock.byte
+*)
 
 let pp_period ppf = function
 | None -> Format.fprintf ppf "unknown"

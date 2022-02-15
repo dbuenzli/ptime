@@ -1,3 +1,14 @@
+
+
+* Require OCaml >= 4.08
+* Change the `js_of_ocaml` strategy for `Ptime_clock`'s JavaScript
+  implementation. Primitives of `ptime.clock.os` are now implemented
+  in pure JavaScript and linked by `js_of_ocaml`. This means that the
+  `ptime.clock.jsoo` library is no longer needed and deprecated:
+  simply link against `ptime.clock.os` instead.
+  
+  Thanks to Hugo Heuzard for suggesting and implementing this. 
+
 v0.8.6 2021-11-28 Zagreb
 ------------------------
 
