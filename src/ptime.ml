@@ -304,8 +304,8 @@ module Span = struct
         if ps >= ps_count_in_ns then pp_ns ppf ~neg ps else
         pp_ps ppf ~neg ps
     | (d, ps) ->
-        if d > 365 then pp_y_d ppf neg d ps else
-        pp_d_h ppf neg d ps
+        if d > 365 then pp_y_d ppf ~neg d ps else
+        pp_d_h ppf ~neg d ps
 end
 
 (* POSIX timestamps *)
