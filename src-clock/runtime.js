@@ -33,6 +33,7 @@ function ocaml_ptime_clock_now_d_ps (_unit) {
   var rem_ms = ms % 86400000;
   if (rem_ms < 0) rem_ms += 86400000
   if (rem_ms >= 86400000) {
+    /* Guard against a potential overflow in the computation of [rem_s] */
     days += 1;
     if (days > dmax) err (ms);
     ps = caml_int64_of_int32 (0);

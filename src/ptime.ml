@@ -145,7 +145,12 @@ module Span = struct
     if days < min_int_float || days > max_int_float then None else
     let rem_s = mod_float secs 86_400. in
     let rem_s = if rem_s < 0. then 86_400. +. rem_s else rem_s in
-    if rem_s >= 86_400. then Some (int_of_float days + 1, 0L) else
+    if rem_s >= 86_400. then
+      (* Guard against a potential overflow in the computation of [rem_s] *)
+      let days = days +. 1. in
+      if days > max_int_float then None else
+      Some (int_of_float days, 0L)
+    else
     let frac_s, rem_s = modf rem_s in
     let rem_ps = Int64.(mul (of_float rem_s) ps_count_in_s) in
     let frac_ps = Int64.(of_float (frac_s *. 1e12)) in
