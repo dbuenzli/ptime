@@ -7,10 +7,10 @@ plugin(byte) = "ptime.cma"
 plugin(native) = "ptime.cmxs"
 
 package "top" (
-  directory="top"
   description = "Ptime toplevel support"
   version = "%%VERSION_NUM%%"
   requires = "ptime"
+  directory = "top"
   archive(byte) = "ptime_top.cma"
   archive(native) = "ptime_top.cmxa"
   plugin(byte) = "ptime_top.cma"
@@ -24,10 +24,10 @@ package "clock" (
   directory = "clock"
 
   package "os" (
-    directory="os"
     description = "Ptime_clock for your platform (including JavaScript)"
     version = "%%VERSION_NUM%%"
     requires = "ptime"
+    directory = "os"
     archive(byte) = "ptime_clock.cma"
     archive(native) = "ptime_clock.cmxa"
     plugin(byte) = "ptime_clock.cma"
