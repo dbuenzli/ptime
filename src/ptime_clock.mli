@@ -21,7 +21,7 @@ val now : unit -> Ptime.t
 (** [now ()] is the current POSIX time, by definition always on the
     UTC timeline.
 
-    @raise Sys_error see {{!err}error handling}. *)
+    Raises {!Sys_error}, see {{!err}error handling}. *)
 
 val period : unit -> Ptime.span option
 (** [period ()] is a positive POSIX time span representing
@@ -42,7 +42,7 @@ val now_d_ps : unit -> int * int64
     1970-01-01 00:00:00 UTC. [ps] is in the range
     \[[0];[86_399_999_999_999_999L]\].
 
-    @raise Sys_error see {{!err}error handling} *)
+    Raises {!Sys_error}, see {{!err}error handling} *)
 
 val period_d_ps : unit -> (int * int64) option
 (** [period_d_ps ()] is if available [Some (d, ps)] representing the
