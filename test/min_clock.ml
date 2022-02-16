@@ -30,4 +30,4 @@ let main () =
   Format.printf "   Now local: %a@." Ptime.(pp_human ?tz_offset_s ()) now;
   ()
 
-let () = main ()
+let () = if !Sys.interactive then () else main ()
