@@ -74,12 +74,15 @@ let min_clock =
   let doc = "Minimal clock example" in
   B0_ocaml.exe "min-clock" ~doc ~srcs ~meta ~requires
 
+(* FIXME b0 this forces the whole build to bytecode which is not
+   what we want.
 let min_clock_jsoo =
   let srcs = [in_test "min_clock.ml"] in
   let meta = B0_meta.(empty |> tag test) in
   let meta = B0_jsoo.meta ~requires:[ptime; ptime_clock_os] ~meta () in
   let doc = "Minimal clock example" in
   B0_jsoo.web "min-clock-jsoo" ~doc ~srcs ~meta
+*)
 
 (* Packs *)
 

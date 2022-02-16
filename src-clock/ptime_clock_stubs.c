@@ -1,8 +1,7 @@
 /*---------------------------------------------------------------------------
    Copyright (c) 2015 The ptime programmers. All rights reserved.
    Distributed under the ISC license, see license at the end of the file.
-   %%NAME%% release %%VERSION%%
-   --------------------------------------------------------------------------*/
+  --------------------------------------------------------------------------*/
 
 #include <caml/mlvalues.h>
 #include <caml/alloc.h>
@@ -279,4 +278,4 @@ CAMLprim value ocaml_ptime_clock_current_tz_offset_s (value unit)
    WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
    ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
    OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-   --------------------------------------------------------------------------*/
+  --------------------------------------------------------------------------*/
