@@ -8,6 +8,8 @@
   simply link against `ptime.clock.os` instead.
   
   Thanks to Hugo Heuzard for suggesting and implementing this. 
+  
+* Correct a potential overflow in Ptime.Span.of_float_s (#26). 
 
 v0.8.6 2021-11-28 Zagreb
 ------------------------

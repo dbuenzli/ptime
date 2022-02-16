@@ -5,9 +5,8 @@ true : bin_annot, safe_string
 <src> : include
 <src/ptime_top*> : package(compiler-libs.toplevel)
 
+<src-clock> : include
 <src-clock/ptime_clock.{cma,cmxa}> : record_ptime_clock_os_stubs
 <src-clock/ptime_clock.cmxs> : link_ptime_clock_os_stubs
 
 <test/test_unix*> : package(unix)
-<test/min_clock_os.*> : use_ptime_clock_os
-<test/min_clock_os.byte> : custom
