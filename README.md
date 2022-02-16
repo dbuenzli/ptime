@@ -37,7 +37,7 @@ interfaces. It can be consulted [online][doc] or via `odig doc ptime`.
 
 [doc]: http://erratique.ch/software/ptime/doc/
 
-## Sample programs
+# Sample programs
 
 If you installed Ptime with `opam` sample programs are located in
 the directory `opam config var ptime:doc`.

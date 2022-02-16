@@ -1,7 +1,8 @@
 open Ocamlbuild_plugin
 open Command
 
-let os = Ocamlbuild_pack.My_unix.run_and_read "uname -s"
+let os = try Sys.getenv "PTIME_OS" with
+| Not_found -> Ocamlbuild_pack.My_unix.run_and_read "uname -s"
 
 let system_support_lib = match os with
 | "Linux\n" -> [A "-cclib"; A "-lrt"]
