@@ -34,13 +34,4 @@ package "clock" (
     plugin(native) = "ptime_clock.cmxs"
     linkopts(javascript) = "+ptime.clock.os/runtime.js"
     exists_if = "ptime_clock.cma")
-
-  package "jsoo" (
-    warning =
-      "Deprecated. Use ptime.clock.os instead (includes JavaScript support)."
-    description = "Deprecated use ptime.clock.os"
-    version = "%%VERSION_NUM%%"
-    requires = "ptime.clock.os"
-    directory="jsoo"
-  )
 )
