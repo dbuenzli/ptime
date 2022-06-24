@@ -356,12 +356,13 @@ val to_date : t -> date
 
 val weekday :
   ?tz_offset_s:tz_offset_s -> t ->
-  [ `Mon | `Tue | `Wed | `Thu | `Fri | `Sat | `Sun ]
+  [ `Sun | `Mon | `Tue | `Wed | `Thu | `Fri | `Sat ]
 (** [weekday ~tz_offset_s t] is the day in the 7-day week of timestamp [t]
-    expressed in the time zone offset [ts_offset_s] (defaults to [0]).
+    expressed in the time zone offset [ts_offset_s] (defaults to [0]). *)
 
-    This can be used with the time zone offset result of {!to_date_time}
-    to convert timestamps to denormalized timestamp formats. *)
+val weekday_num : ?tz_offset_s:tz_offset_s -> t -> int
+(** [weekday_num] is like {!weekday} but returns a weekday number, 0
+    is sunday, 1 is monday, …, 6 is saturday etc. *)
 
 (** {1:rfc3339 RFC 3339 timestamp conversions} *)
 

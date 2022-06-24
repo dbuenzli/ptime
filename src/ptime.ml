@@ -444,18 +444,17 @@ let to_date_time ?(tz_offset_s = 0) t =
 let of_date date = of_date_time (date, ((00, 00, 00), 0))
 let to_date t = fst (to_date_time ~tz_offset_s:0 t)
 
+let weekday_num ?(tz_offset_s = 0) t =
+  let (d, _) = Span.add t (Span.of_int_s tz_offset_s) in
+  (* N.B. in contrast to [to_date_time] we don't care if we fall outside
+    [min;max]. Even if it happens the result of the computation is still
+     correct *)
+  let i = (d + 4 (* Epoch, d = 0, was a thu, we want 4 for that day *)) mod 7 in
+  if i < 0 then 7 + i else i
+
 let weekday =
-  let wday =
-    (* Epoch was a thursday *)
-    [| `Thu; `Fri; `Sat; `Sun; `Mon; `Tue; `Wed |]
-  in
-  fun ?(tz_offset_s = 0) t ->
-    let (d, _) = Span.add t (Span.of_int_s tz_offset_s) in
-    (* N.B. in contrast to [to_date_time] we don't care if we fall outside
-       [min;max]. Even if it happens the result of the computation is still
-       correct *)
-    let i = d mod 7 in
-    wday.(if i < 0 then 7 + i else i)
+  let wday = [| `Sun; `Mon; `Tue; `Wed; `Thu; `Fri; `Sat; |] in
+  fun ?tz_offset_s t -> wday.(weekday_num ?tz_offset_s t)
 
 (* RFC 3339 timestamp conversions *)
 

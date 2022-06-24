@@ -165,7 +165,8 @@ let round_trips =
   ()
 
 let weekday =
-  test "Ptime.weekday" @@ fun () ->
+  test "Ptime.{weekday_num,weekday}" @@ fun () ->
+  (* weekday tests weekday_num *)
   let pp_weekday ppf v = Format.pp_print_string ppf begin match v with
     | `Mon -> "`Mon" | `Tue -> "`Tue" | `Wed -> "`Wed" | `Thu -> "`Thu"
     | `Fri -> "`Fri" | `Sat -> "`Sat" | `Sun -> "`Sun"

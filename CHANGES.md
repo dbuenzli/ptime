@@ -1,3 +1,7 @@
+
+- Add `Ptime.weekday_num`, an integer is often more convenient
+  than the enum value of `Ptime.weekday`.
+
 v1.0.0 2022-02-16 La Forclaz
 ----------------------------
 
