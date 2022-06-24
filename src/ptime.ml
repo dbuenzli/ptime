@@ -555,10 +555,20 @@ let parse_frac_ps pos max s =
 let parse_tz_s ~strict pos max s =
   let parse_tz_mag sign pos =
     let hh_pos = pos in
-    let mm_pos = hh_pos + 3 in
     let hh = parse_digits ~count:2 hh_pos max s in
-    parse_char ':' (mm_pos - 1) max s;
-    let mm = parse_digits ~count:2 mm_pos max s in
+    let mm, mm_pos = match strict with
+    | true ->
+        let mm_pos = hh_pos + 3 in
+        parse_char ':' (mm_pos - 1) max s;
+        parse_digits ~count:2 mm_pos max s, mm_pos
+    | false ->
+        let next = hh_pos + 2 in
+        if next > max || not (s.[next] = ':' || is_digit s.[next])
+        then (0, hh_pos (* end pos of parse - 1, one is added at the end *))
+        else
+        let mm_pos = if s.[next] = ':' then hh_pos + 3 else hh_pos + 2 in
+        parse_digits ~count:2 mm_pos max s, mm_pos
+    in
     if hh > 23 then error (hh_pos, hh_pos + 1) `Invalid_stamp else
     if mm > 59 then error (mm_pos, mm_pos + 1) `Invalid_stamp else
     let secs = hh * 3600 + mm * 60 in

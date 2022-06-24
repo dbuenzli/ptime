@@ -1,4 +1,8 @@
 
+- `Ptime.of_rfc3339` timezone offset parsing. Be even more lenient 
+   on non-strict parsing mode: allow `hhmm` and `hh` timezone offsets.
+   (strict is `hh:mm`). Allows to parse a larger subset of 
+   ISO 8601.
 - Add `Ptime.{to,of}_year`. Less costly than extracting the first 
   component of `Ptime.to_date_time`. Useful for example to find 
   out which DST rules a timestamp is subjected to for rendering.

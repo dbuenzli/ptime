@@ -100,9 +100,7 @@ let parse = test "RFC 3339 to stamp conversions" @@ fun () ->
   let etz_strict = `Exp_chars ['+'; '-'; 'Z'] in
   let edtsep = `Exp_chars ['T';'t';' '] in
   let edtsep_strict = `Exp_chars ['T'] in
-  let p ?strict ?sub ?start ?len s =
-    Ptime.of_rfc3339 ?strict ?sub ?start s
-  in
+  let p ?strict ?sub ?start ?len s = Ptime.of_rfc3339 ?strict ?sub ?start s in
   let err (s,e) err = Error (`RFC3339 ((s, e), err)) in
   let err_pos pos e = err (pos, pos) e in
   let ok s ~tz ~count = Ok (stamp_of_s s, tz, count) in
@@ -161,7 +159,9 @@ let parse = test "RFC 3339 to stamp conversions" @@ fun () ->
   eq_result (p "1969-12X31T23:59:58Z") (err_pos 7 (`Exp_chars ['-']));
   eq_result (p "1969-12-31T23X59:58Z") (err_pos 13 (`Exp_chars [':']));
   eq_result (p "1969-12-31T23:59X58Z") (err_pos 16 (`Exp_chars [':']));
-  eq_result (p "1969-12-31T23:59:58+00X00") (err_pos 22 (`Exp_chars [':']));
+  eq_result (p ~strict:true "1969-12-31T23:59:58+00X00")
+    (err_pos 22 (`Exp_chars [':']));
+  eq_result (p "1969-12-31T23:59:58+00X00") (err_pos 22 `Trailing_input);
   eq_result (p ~start:(-1) "1970-01-01") (err_pos (-1) `Eoi);
   eq_result (p ~start:11 "1970-01-01") (err_pos 11 `Eoi);
   eq_result (p "") (err_pos 0 `Eoi);
@@ -169,6 +169,10 @@ let parse = test "RFC 3339 to stamp conversions" @@ fun () ->
   eq_result (p "9999-12-31T23:59:59-00:01") (err (0, 24) `Invalid_stamp);
   eq_result (p "1900-02-29T01:02:03Z") (err (0, 19) `Invalid_stamp);
   eq_result (p "01-02-29T01:02:03Z") (err_pos 2 edigit);
+  eq_result (p "1970-01-01T00:00:00.00+0101")
+    (ok (-3660.00) ~tz:(Some 3660) ~count:27);
+  eq_result (p "1970-01-01T00:00:00.00+01")
+    (ok (-3600.00) ~tz:(Some 3600) ~count:25);
   ()
 
 let stamp_trips = test "Random stamps to RFC 3339 round trips" @@ fun () ->
