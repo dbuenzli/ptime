@@ -405,6 +405,11 @@ val rfc3339_error_to_msg : ('a, [`RFC3339 of error_range * rfc3339_error])
 (** [rfc3339_error_to_msg r] converts RFC 3339 parse errors to error
     messages. *)
 
+val rfc3339_string_error :
+  ('a, [`RFC3339 of error_range * rfc3339_error]) result -> ('a, string) result
+(** [rfc3339_string_error r] converts RFC 3339 parse errors errors to
+    string errors. *)
+
 val of_rfc3339 : ?strict:bool -> ?sub:bool -> ?start:int -> string ->
   ((t * tz_offset_s option * int),
    [> `RFC3339 of error_range * rfc3339_error]) result

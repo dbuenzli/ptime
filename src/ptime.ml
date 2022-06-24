@@ -490,10 +490,18 @@ let pp_rfc3339_error ppf = function
     in
     Format.fprintf ppf "@[expected@ a@ character@ in:%a@]" pp_chars cs
 
+let pp_range ppf (s, e) =
+  if s = e  then Format.pp_print_int ppf s else Format.fprintf ppf "%d-%d" s e
+
+let _rfc3339_error_to_string (r, err) =
+  Format.asprintf "@[<h>%a: %a@]" pp_range r pp_rfc3339_error err
+
+let rfc3339_string_error = function
+| Ok _ as v -> v | Error (`RFC3339 e) -> Error (_rfc3339_error_to_string e)
+
 let rfc3339_error_to_msg = function
-| Ok _ as v -> v
-| Error (`RFC3339 ((s, e), err)) ->
-    Error (`Msg (Format.asprintf "%d-%d: %a" s e pp_rfc3339_error err))
+| Ok _ as v -> v | Error (`RFC3339 e) ->
+    Error (`Msg (_rfc3339_error_to_string e))
 
 exception RFC3339 of (int * int) * rfc3339_error                  (* Internal *)
 
