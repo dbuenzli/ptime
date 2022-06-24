@@ -354,10 +354,20 @@ val to_date_time : ?tz_offset_s:tz_offset_s -> t -> date * time
 
 val of_date : ?tz_offset_s:tz_offset_s -> date -> t option
 (** [of_date d] is
-    [of_date_time (d, ((00, 00, 00), ?tz_offset_s))]. *)
+    [of_date_time (d, ((00, 00, 00), tz_offset_s))]. [tz_offset_s]
+    defaults to 0, i.e. UTC. *)
 
 val to_date : ?tz_offset_s:tz_offset_s -> t -> date
 (** [to_date t] is [fst (to_date_time ?tz_offset_s t)]. *)
+
+(** {2:years Year} *)
+
+val of_year : ?tz_offset_s:tz_offset_s -> int -> t option
+(** [of_year y] is [of_date ?tz_offset_s (y, 01, 01)]. *)
+
+val to_year : ?tz_offset_s:tz_offset_s -> t -> int
+(** [to_year t] is the first component of [(to_date ?tz_offset_s t))] but
+    more efficient. *)
 
 (** {2:weekdays Week days} *)
 

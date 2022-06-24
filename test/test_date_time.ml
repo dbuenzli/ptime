@@ -151,7 +151,11 @@ let round_trips =
     let (_, (_, tz_offset_s) as dt) = rand_date_time_stamp () in
     let stamp = stamp_of_date_time dt in
     if not (is_leap_sec dt)
-    then eq_date_time dt (Ptime.to_date_time ~tz_offset_s stamp)
+    then begin
+      let ((y, _, _), _ as dt') = Ptime.to_date_time ~tz_offset_s stamp in
+      assert (Ptime.to_year ~tz_offset_s stamp = y);
+      eq_date_time dt dt'
+    end
     else begin
       (* Verify we map the leap sec on the the second after. *)
       let before_leap_dt = match dt with

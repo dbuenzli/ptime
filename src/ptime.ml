@@ -28,6 +28,15 @@ let jd_to_date jd =
   let year = 100 * b + d - 4800 + (m / 10) in
   (year, month, day)
 
+let jd_to_year jd = (* Same as above but only for the year *)
+  let a = jd + 32044 in
+  let b = (4 * a + 3) / 146097 in
+  let c = a - ((146097 * b) / 4) in
+  let d = (4 * c + 3) / 1461 in
+  let e = c - ((1461 * d) / 4) in
+  let m = (5 * e + 2) / 153 in
+  100 * b + d - 4800 + (m / 10)
+
 let jd_of_date (year, month, day) =
   let a = (14 - month) / 12 in
   let y = year + 4800 - a in
@@ -441,10 +450,14 @@ let to_date_time ?(tz_offset_s = 0) t =
   let ss = Int64.(to_int (div mm_rem ps_count_in_s)) in
   date, ((hh, mm, ss), tz_offset_s)
 
-let of_date ?(tz_offset_s = 0) date =
-  of_date_time (date, ((00, 00, 00), tz_offset_s))
-
+let of_date ?tz_offset_s:(tz = 0) date = of_date_time (date, ((00, 00, 00), tz))
 let to_date ?tz_offset_s t = fst (to_date_time ?tz_offset_s t)
+let of_year ?tz_offset_s y = of_date ?tz_offset_s (y, 01, 01)
+let to_year ?(tz_offset_s = 0) t =
+  let d = match add_span t (Span.of_int_s tz_offset_s) with
+  | None -> fst t (* fallback to UTC *) | Some (local_d, _) -> local_d
+  in
+  jd_to_year (d + jd_posix_epoch)
 
 let weekday_num ?(tz_offset_s = 0) t =
   let (d, _) = Span.add t (Span.of_int_s tz_offset_s) in

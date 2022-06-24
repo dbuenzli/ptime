@@ -1,4 +1,7 @@
 
+- Add `Ptime.{to,of}_year`. Less costly than extracting the first 
+  component of `Ptime.to_date_time`. Useful for example to find 
+  out which DST rules a timestamp is subjected to for rendering.
 - Add `?tz_offset_s` optional argument to `Ptime.{of,to}_date` (#32).
 - Add `Ptime.weekday_num`, an integer is often more convenient
   than the enum value of `Ptime.weekday` (#30).
