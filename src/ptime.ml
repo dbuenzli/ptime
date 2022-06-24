@@ -441,8 +441,10 @@ let to_date_time ?(tz_offset_s = 0) t =
   let ss = Int64.(to_int (div mm_rem ps_count_in_s)) in
   date, ((hh, mm, ss), tz_offset_s)
 
-let of_date date = of_date_time (date, ((00, 00, 00), 0))
-let to_date t = fst (to_date_time ~tz_offset_s:0 t)
+let of_date ?(tz_offset_s = 0) date =
+  of_date_time (date, ((00, 00, 00), tz_offset_s))
+
+let to_date ?tz_offset_s t = fst (to_date_time ?tz_offset_s t)
 
 let weekday_num ?(tz_offset_s = 0) t =
   let (d, _) = Span.add t (Span.of_int_s tz_offset_s) in

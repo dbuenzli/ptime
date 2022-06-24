@@ -308,6 +308,8 @@ type time = (int * int * int) * tz_offset_s
     A [time] value is said to be {e valid} iff the values [(hh, mm, ss)]
     are in the ranges mentioned above. *)
 
+(** {2:datetimes Date and time} *)
+
 val of_date_time : date * time -> t option
 (** [of_date_time dt] is the POSIX timestamp corresponding to
     date-time [dt] or [None] if [dt] has an {{!date}invalid date},
@@ -348,11 +350,16 @@ val to_date_time : ?tz_offset_s:tz_offset_s -> t -> date * time
     are floored, i.e. the date-time always has the second mentioned in
     the timestamp. *)
 
-val of_date : date -> t option
-(** [of_date d] is [of_date_time (d, ((00, 00, 00), 0 (* UTC *)))]. *)
+(** {2:dates Date} *)
 
-val to_date : t -> date
-(** [to_date t] is [fst (to_date_time t)]. *)
+val of_date : ?tz_offset_s:tz_offset_s -> date -> t option
+(** [of_date d] is
+    [of_date_time (d, ((00, 00, 00), ?tz_offset_s))]. *)
+
+val to_date : ?tz_offset_s:tz_offset_s -> t -> date
+(** [to_date t] is [fst (to_date_time ?tz_offset_s t)]. *)
+
+(** {2:weekdays Week days} *)
 
 val weekday :
   ?tz_offset_s:tz_offset_s -> t ->

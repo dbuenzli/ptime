@@ -1,6 +1,7 @@
 
+- Add `?tz_offset_s` optional argument to `Ptime.{of,to}_date` (#32).
 - Add `Ptime.weekday_num`, an integer is often more convenient
-  than the enum value of `Ptime.weekday`.
+  than the enum value of `Ptime.weekday` (#30).
 
 v1.0.0 2022-02-16 La Forclaz
 ----------------------------
