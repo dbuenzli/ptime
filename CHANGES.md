@@ -10,6 +10,8 @@
 - Add `Ptime.weekday_num`, an integer is often more convenient
   than the enum value of `Ptime.weekday` (#30).
 - Add `Ptime.rfc3339_string_error` convenience function.
+- Use the new `js_of_ocaml` META standard to link JavaScript 
+  stubs (#28).
 
 v1.0.0 2022-02-16 La Forclaz
 ----------------------------
