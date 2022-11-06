@@ -1,4 +1,6 @@
 
+
+
 - `Ptime.of_rfc3339` timezone offset parsing. Be even more lenient 
    on non-strict parsing mode: allow `hhmm` and `hh` timezone offsets.
    (strict is `hh:mm`). Allows to parse a larger subset of 
@@ -12,6 +14,7 @@
 - Add `Ptime.rfc3339_string_error` convenience function.
 - Use the new `js_of_ocaml` META standard to link JavaScript 
   stubs (#28).
+- No longer install interfaces in the `ptime.clock` package.
 
 v1.0.0 2022-02-16 La Forclaz
 ----------------------------
