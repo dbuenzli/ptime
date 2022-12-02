@@ -1,5 +1,5 @@
-
-
+v1.1.0 2022-12-02 Zagreb
+------------------------
 
 - `Ptime.of_rfc3339` timezone offset parsing. Be even more lenient 
    in non-strict parsing mode: allow `hhmm` and `hh` timezone offsets.

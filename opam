@@ -19,7 +19,7 @@ under the ISC license.
 
 [rfc3339]: http://tools.ietf.org/html/rfc3339
 
-Home page: http://erratique.ch/software/ptime"""
+Home page: <http://erratique.ch/software/ptime>"""
 maintainer: "Daniel Bünzli <daniel.buenzl i@erratique.ch>"
 authors: "The ptime programmers"
 license: "ISC"
