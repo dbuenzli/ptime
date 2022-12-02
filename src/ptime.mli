@@ -427,10 +427,12 @@ val of_rfc3339 : ?strict:bool -> ?sub:bool -> ?start:int -> string ->
        timestamp. If [sub] is [false] (default) this is always
        [String.length s - start] and [Error `Trailing_input] is returned
        if there are still bytes in [s] after the date-time was parsed. Use
-       [~sub:true] for allowing trailing input to exist.}}
-    If [strict] is [true] (defaults to [false]) the parsing function
-    errors on timestamps with lowercase ['T'] or ['Z'] characters or
-    space separated date and times.
+       [~sub:true] for allowing trailing input to exist.}
+    {- [strict] if [false] (default) the pasring function does
+       not error on timestamp with lowercase ['T'] or ['Z'] characters, or
+       space separated date and times, and `hhmm` and `hh` timezone
+       offsets (strict mandates [hh:mm]). This allows to parse a slightly
+       larger subset of ISO 8601 than what RFC 3339 allows}}
 
     {b Notes and limitations.}
     {ul

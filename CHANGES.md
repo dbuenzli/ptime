@@ -2,19 +2,20 @@
 
 
 - `Ptime.of_rfc3339` timezone offset parsing. Be even more lenient 
-   on non-strict parsing mode: allow `hhmm` and `hh` timezone offsets.
-   (strict is `hh:mm`). Allows to parse a larger subset of 
-   ISO 8601 (#31).
+   in non-strict parsing mode: allow `hhmm` and `hh` timezone offsets.
+   (strict is `hh:mm`). Allows to parse an even larger subset of 
+   ISO 8601 than RFC 3339 (#31).
 - Add `Ptime.{to,of}_year`. Less costly than extracting the first 
   component of `Ptime.to_date_time`. Useful for example to find 
   out which DST rules a timestamp is subjected to for rendering.
 - Add `?tz_offset_s` optional argument to `Ptime.{of,to}_date` (#32).
-- Add `Ptime.weekday_num`, an integer is often more convenient
+- Add `Ptime.weekday_num`. An integer is often more convenient
   than the enum value of `Ptime.weekday` (#30).
 - Add `Ptime.rfc3339_string_error` convenience function.
-- Use the new `js_of_ocaml` META standard to link JavaScript 
-  stubs (#28).
-- No longer install interfaces in the `ptime.clock` package.
+- Use the new `js_of_ocaml` META `ocamlfind` standard to link 
+  JavaScript stubs (#28).
+- No longer install interfaces in the `ptime.clock` package,
+  this package is now empty.
 
 v1.0.0 2022-02-16 La Forclaz
 ----------------------------
