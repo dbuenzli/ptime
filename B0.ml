@@ -73,7 +73,7 @@ let min_clock =
   let doc = "Minimal clock example" in
   B0_ocaml.exe "min-clock" ~doc ~srcs ~meta ~requires
 
-(* FIXME b0 this forces the whole build to bytecode which is not
+(* TODO b0 this forces the whole build to bytecode which is not
    what we want.
 let min_clock_jsoo =
   let srcs = [in_test "min_clock.ml"] in
@@ -87,26 +87,25 @@ let min_clock_jsoo =
 
 let default =
   let meta =
-    let open B0_meta in
-    empty
-    |> tag B0_opam.tag
-    |> add authors ["The ptime programmers"]
-    |> add maintainers ["Daniel Bünzli <daniel.buenzl i@erratique.ch>"]
-    |> add homepage "https://erratique.ch/software/ptime"
-    |> add online_doc "https://erratique.ch/software/ptime/doc/"
-    |> add licenses ["ISC"]
-    |> add repo "git+https://erratique.ch/repos/ptime.git"
-    |> add issues "https://github.com/dbuenzli/ptime/issues"
-    |> add description_tags
-      ["time"; "posix"; "system"; "org:erratique"]
-    |> add B0_opam.Meta.depends
+    B0_meta.empty
+    |> ~~ B0_meta.authors ["The ptime programmers"]
+    |> ~~ B0_meta.maintainers ["Daniel Bünzli <daniel.buenzl i@erratique.ch>"]
+    |> ~~ B0_meta.homepage "https://erratique.ch/software/ptime"
+    |> ~~ B0_meta.online_doc "https://erratique.ch/software/ptime/doc/"
+    |> ~~ B0_meta.licenses ["ISC"]
+    |> ~~ B0_meta.repo "git+https://erratique.ch/repos/ptime.git"
+    |> ~~ B0_meta.issues "https://github.com/dbuenzli/ptime/issues"
+    |> ~~ B0_meta.description_tags ["time"; "posix"; "system"; "org:erratique"]
+    |> ~~ B0_opam.depends
       [ "ocaml", {|>= "4.08.0"|};
         "ocamlfind", {|build|};
         "ocamlbuild", {|build & != "0.9.0"|};
         "topkg", {|build & >= "1.0.3"|};
       ]
-    |> add B0_opam.Meta.build
+    |> ~~ B0_opam.build
       {|[["ocaml" "pkg/pkg.ml" "build" "--dev-pkg" "%{dev}%"]]|}
+    |> B0_meta.tag B0_opam.tag
+    |> B0_meta.tag B0_release.tag
   in
-  B0_pack.v "default" ~doc:"ptime package" ~meta ~locked:true @@
+  B0_pack.make "default" ~doc:"ptime package" ~meta ~locked:true @@
   B0_unit.list ()
