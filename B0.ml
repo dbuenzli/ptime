@@ -52,7 +52,7 @@ let test =
        "test_span.ml"; "test_base.ml"; "test_date.ml";
        "test_date_time.ml"; "test_rfc3339.ml"; "test.ml" ]
   in
-  let meta = B0_meta.(empty |> tag test) in
+  let meta = B0_meta.(empty |> tag test |> tag run) in
   let requires = [ ptime ] in
   B0_ocaml.exe "test" ~doc:"Test suite" ~srcs ~meta ~requires
 
@@ -61,7 +61,7 @@ let test_unix =
               in_test "test_rand.ml"; in_test "testing_ptime.ml";
               in_test "test_unix.ml"]
   in
-  let meta = B0_meta.(empty |> tag test) in
+  let meta = B0_meta.(empty |> tag test |> tag run) in
   let requires = [ptime; unix] in
   let doc = "Tests against Unix.gmtime" in
   B0_ocaml.exe "test-unix" ~doc ~srcs ~meta ~requires
