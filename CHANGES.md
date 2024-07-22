@@ -1,3 +1,9 @@
+
+- Fix fractional renderings of `Ptime.Span.pp` with leading zeros. For
+  example 1.036s would render as 1.36s. This is a *rendering* bug in a
+  function for human display, not a bug in the computations or
+  conversion functions of `Ptime`.
+
 v1.1.0 2022-12-02 Zagreb
 ------------------------
 

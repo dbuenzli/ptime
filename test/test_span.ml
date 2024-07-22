@@ -250,6 +250,10 @@ let pretty_printing =
   eq_str (nps 1_534_499_999_999L) "-1.534s";
   eq_str (pps 1_000_000_000_000L) "1s";
   eq_str (nps 1_000_000_000_000L) "-1s";
+  eq_str (pps 1_136_000_000_000L) "1.136s";
+  eq_str (nps 1_136_000_000_000L) "-1.136s";
+  eq_str (pps 1_036_000_000_000L) "1.036s";
+  eq_str (nps 1_036_000_000_000L) "-1.036s";
   (* ms *)
   eq_str (pps 999_500_000_000L) "1s";
   eq_str (nps 999_500_000_000L) "-1s";
@@ -263,6 +267,8 @@ let pretty_printing =
   eq_str (nps 1_332_500_000L) "-1.333ms";
   eq_str (pps 1_332_499_999L) "1.332ms";
   eq_str (nps 1_332_499_999L) "-1.332ms";
+  eq_str (pps 1_036_000_000L) "1.036ms";
+  eq_str (nps 1_036_000_000L) "-1.036ms";
   eq_str (pps 1_000_000_000L) "1ms";
   eq_str (nps 1_000_000_000L) "-1ms";
   (* us *)
@@ -278,6 +284,8 @@ let pretty_printing =
   eq_str (nps 1_332_500L) "-1.333us";
   eq_str (pps 1_332_499L) "1.332us";
   eq_str (nps 1_332_499L) "-1.332us";
+  eq_str (pps 1_036_000L) "1.036us";
+  eq_str (nps 1_036_000L) "-1.036us";
   eq_str (pps 1_000_000L) "1us";
   eq_str (nps 1_000_000L) "-1us";
   (* ns *)
@@ -291,6 +299,8 @@ let pretty_printing =
   eq_str (nps 1_994L) "-1.994ns";
   eq_str (pps 1_332L) "1.332ns";
   eq_str (nps 1_332L) "-1.332ns";
+  eq_str (pps 1_036L) "1.036ns";
+  eq_str (nps 1_036L) "-1.036ns";
   eq_str (pps 1_000L) "1ns";
   eq_str (nps 1_000L) "-1ns";
   (* ps *)

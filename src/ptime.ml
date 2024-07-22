@@ -274,7 +274,7 @@ module Span = struct
     let s, ms = divide_ps ~carry:1000 ps ps_count_in_s ps_count_in_ms in
     if s = 60 then Format.fprintf ppf "%dmin" (if neg then -1 else 1) else
     let s = if neg then -s else s in
-    if ms <> 0 then Format.fprintf ppf "%d.%ds" s ms else
+    if ms <> 0 then Format.fprintf ppf "%d.%03ds" s ms else
     Format.fprintf ppf "%ds" s
 
   let pp_unit higher_str hi hi_str frac_limit lo ppf ~neg ps =
@@ -287,7 +287,7 @@ module Span = struct
       let h, l = divide_ps ~carry:1000 ps hi lo in
       if h >= 100 || l = 0 then pp_unit_integral ppf ~neg h else
       let h = if neg then -h else h in
-      Format.fprintf ppf "%d.%d%s" h l hi_str
+      Format.fprintf ppf "%d.%03d%s" h l hi_str
     end else begin
       let ms, _ = divide_ps ~carry:1 ps hi hi in
       pp_unit_integral ppf ~neg ms
