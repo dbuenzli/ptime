@@ -7,33 +7,23 @@ let compiler_libs_toplevel = B0_ocaml.libname "compiler-libs.toplevel"
 let unix = B0_ocaml.libname "unix"
 
 let ptime = B0_ocaml.libname "ptime"
-let ptime_top = B0_ocaml.libname "ptime.top"
 let ptime_clock = B0_ocaml.libname "ptime.clock"
 let ptime_clock_os = B0_ocaml.libname "ptime.clock.os"
+let ptime_top = B0_ocaml.libname "ptime.top"
 
 (* Libraries *)
 
-let ptime_lib =
-  let srcs = Fpath.[`File (v "src/ptime.mli"); `File (v "src/ptime.ml")] in
-  let requires = [] in
-  B0_ocaml.lib ptime ~doc:"The ptime library" ~srcs ~requires
+let ptime_lib = B0_ocaml.lib ptime ~srcs:[`Dir ~/"src"]
+let ptime_clock_lib =
+  let srcs = [`Dir ~/"src/clock"] in
+  B0_ocaml.lib ptime_clock ~srcs ~requires:[ptime] ~exports:[ptime]
 
-let ptime_top =
-  let srcs = Fpath.[`File (v "src/ptime_top.ml")] in
-  let requires = [compiler_libs_toplevel] in
-  B0_ocaml.lib ptime_top ~doc:"The ptime.top library" ~srcs ~requires
-
-let ptime_clock =
-  let srcs = Fpath.[`File (v "src/ptime_clock.mli")] in
-  let requires = [ptime] in
-  let doc = "The ptime.clock interface library" in
-  B0_ocaml.lib ptime_clock ~doc ~srcs ~requires
+let ptime_top_lib =
+  let srcs = [`File ~/"src/top/ptime_top.ml"] in
+  B0_ocaml.lib ptime_top ~srcs ~requires:[compiler_libs_toplevel]
 
 let ptime_clock_os_lib =
-  let srcs = Fpath.[`Dir (v "src-clock") ] in
-  let requires = [ptime] in
-  let doc = "The ptime.clock library (including JavaScript support)" in
-  B0_ocaml.lib ptime_clock_os ~doc ~srcs ~requires
+  B0_ocaml.deprecated_lib ~exports:[ptime_clock] ptime_clock_os
 
 (* Tests *)
 
@@ -69,7 +59,7 @@ let test_unix =
 let min_clock =
   let srcs = [in_test "min_clock.ml"] in
   let meta = B0_meta.(empty |> tag test) in
-  let requires = [ptime; ptime_clock_os] in
+  let requires = [ptime; ptime_clock] in
   let doc = "Minimal clock example" in
   B0_ocaml.exe "min-clock" ~doc ~srcs ~meta ~requires
 

@@ -3,6 +3,9 @@
   example 1.036s would render as 1.36s. This is a *rendering* bug in a
   function for human display, not a bug in the computations or
   conversion functions of `Ptime`.
+- Regularize naming structure. The `ptime.clock.os` library is deprecated. 
+  Use `ptime.clock` instead.
+- Make the library `ptime.clock` export `ptime`.
 
 v1.1.0 2022-12-02 Zagreb
 ------------------------

@@ -16,8 +16,9 @@ current time zone offset.
 
 {!modules: Ptime}
 
-{1:ptime_clock Library [ptime.clock.os]}
+{1:ptime_clock Library [ptime.clock]}
 
 {!modules: Ptime_clock}
 
-Also use this library for compiling to JavaScript.
+This library also works with JavaScript,
+see the {{!Ptime_clock.platform_support}platform support}.

@@ -5,33 +5,38 @@ archive(byte) = "ptime.cma"
 archive(native) = "ptime.cmxa"
 plugin(byte) = "ptime.cma"
 plugin(native) = "ptime.cmxs"
+exists_if = "ptime.cma ptime.cmxa"
 
-package "top" (
-  description = "Ptime toplevel support"
+package "clock" (
+  directory = "clock"
+  description = "The ptime.clock library"
   version = "%%VERSION_NUM%%"
   requires = "ptime"
+  exports = "ptime"
+  archive(byte) = "ptime_clock.cma"
+  archive(native) = "ptime_clock.cmxa"
+  plugin(byte) = "ptime_clock.cma"
+  plugin(native) = "ptime_clock.cmxs"
+  jsoo_runtime = "runtime.js"
+  exists_if = "ptime_clock.cma ptime_clock.cmxa"
+
+  package "os" (
+    description = "The ptime.clock.os library (deprecated)"
+    version = "%%VERSION_NUM%%"
+    requires = "ptime.clock"
+    exports = "ptime.clock"
+    warning = "Deprecated, use the ptime.clock library."
+  )
+)
+
+package "top" (
   directory = "top"
+  description = "The ptime.top library"
+  version = "%%VERSION_NUM%%"
+  requires = "compiler-libs.toplevel"
   archive(byte) = "ptime_top.cma"
   archive(native) = "ptime_top.cmxa"
   plugin(byte) = "ptime_top.cma"
   plugin(native) = "ptime_top.cmxs"
-)
-
-package "clock" (
-  description = "POSIX time clock interface"
-  version = "%%VERSION_NUM%%"
-  requires = ""
-  directory = "clock"
-
-  package "os" (
-    description = "Ptime_clock for your platform (including JavaScript)"
-    version = "%%VERSION_NUM%%"
-    requires = "ptime"
-    directory = "os"
-    archive(byte) = "ptime_clock.cma"
-    archive(native) = "ptime_clock.cmxa"
-    plugin(byte) = "ptime_clock.cma"
-    plugin(native) = "ptime_clock.cmxs"
-    jsoo_runtime = "runtime.js"
-    exists_if = "ptime_clock.cma")
+  exists_if = "ptime_top.cma ptime_top.cmxa"
 )

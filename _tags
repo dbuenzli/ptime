@@ -1,12 +1,8 @@
 true : bin_annot, safe_string
-
 <_b0> : -traverse
-
 <src> : include
-<src/ptime_top*> : package(compiler-libs.toplevel)
-
-<src-clock> : include
-<src-clock/ptime_clock.{cma,cmxa}> : record_ptime_clock_os_stubs
-<src-clock/ptime_clock.cmxs> : link_ptime_clock_os_stubs
-
-<test/test_unix*> : package(unix)
+<src/top> : include
+<src/top/ptime_top*> : package(compiler-libs.toplevel)
+<src/clock> : include
+<src/clock/ptime_clock.{cma,cmxa}> : record_ptime_clock_stubs
+<src/clock/ptime_clock.cmxs> : link_ptime_clock_stubs
