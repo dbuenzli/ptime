@@ -3,6 +3,7 @@ open Result.Syntax
 
 (* OCaml library names *)
 
+let b0_std = B0_ocaml.libname "b0.std"
 let compiler_libs_toplevel = B0_ocaml.libname "compiler-libs.toplevel"
 let unix = B0_ocaml.libname "unix"
 
@@ -27,51 +28,44 @@ let ptime_clock_os_lib =
 
 (* Tests *)
 
-let in_test f = `File (Fpath.v ("test/" ^ f))
+let test ?(requires = []) =
+  B0_ocaml.test ~requires:(ptime :: b0_std :: requires)
 
-let basics =
-  let srcs = [in_test "basics.ml"] in
-  let meta = B0_meta.(empty |> tag test) in
-  let requires = [ptime] in
-  B0_ocaml.exe "basics" ~doc:"Examples from the API docs" ~srcs ~meta ~requires
+let testing_ptime = `File ~/"test/testing_ptime.ml"
 
-let test =
+let test_ptime =
   let srcs =
-    List.map in_test
-      ["testing.mli"; "testing.ml"; "testing_ptime.ml"; "test_rand.ml";
-       "test_span.ml"; "test_base.ml"; "test_date.ml";
-       "test_date_time.ml"; "test_rfc3339.ml"; "test.ml" ]
+      [ testing_ptime;
+       `File ~/"test/test_span.ml"; `File ~/"test/test_base.ml";
+       `File ~/"test/test_date.ml"; `File ~/"test/test_date_time.ml";
+       `File ~/"test/test_rfc3339.ml"; `File ~/"test/test_ptime.ml" ]
   in
-  let meta = B0_meta.(empty |> tag test |> tag run) in
-  let requires = [ ptime ] in
-  B0_ocaml.exe "test" ~doc:"Test suite" ~srcs ~meta ~requires
+  test ~/"test/test_ptime.ml" ~srcs ~requires:[unix]
 
-let test_unix =
-  let srcs = [in_test "testing.mli"; in_test "testing.ml";
-              in_test "test_rand.ml"; in_test "testing_ptime.ml";
-              in_test "test_unix.ml"]
-  in
-  let meta = B0_meta.(empty |> tag test |> tag run) in
-  let requires = [ptime; unix] in
-  let doc = "Tests against Unix.gmtime" in
-  B0_ocaml.exe "test-unix" ~doc ~srcs ~meta ~requires
+let test_gmtime =
+  let doc = "Test random stamps against Unix.gmtime" in
+  let srcs = [testing_ptime] in
+  test ~/"test/test_gmtime.ml" ~srcs ~requires:[unix] ~doc
+
+let test_gmtime_all =
+  let doc = "Test all second stamps against Unix.gmtime (very long)" in
+  let srcs = [testing_ptime;] in
+  test ~/"test/test_gmtime_all.ml" ~run:false ~srcs ~requires:[unix] ~doc
 
 let min_clock =
-  let srcs = [in_test "min_clock.ml"] in
+  let doc = "Minimal clock example" in
+  test ~/"test/min_clock.ml" ~run:false ~doc ~requires:[ptime_clock]
+
+(* FIXME b0 this makes the whole build bytecode. *)
+(* let min_clock_jsoo =
+  let doc = "Minimal clock example in JavaScript" in
+  let srcs = [`File ~/"test/min_clock.ml"] in
   let meta = B0_meta.(empty |> tag test) in
   let requires = [ptime; ptime_clock] in
-  let doc = "Minimal clock example" in
-  B0_ocaml.exe "min-clock" ~doc ~srcs ~meta ~requires
+  B0_jsoo.html_page "min-clock-jsoo" ~doc ~srcs ~meta ~requires *)
 
-(* TODO b0 this forces the whole build to bytecode which is not
-   what we want.
-let min_clock_jsoo =
-  let srcs = [in_test "min_clock.ml"] in
-  let meta = B0_meta.(empty |> tag test) in
-  let meta = B0_jsoo.meta ~requires:[ptime; ptime_clock_os] ~meta () in
-  let doc = "Minimal clock example" in
-  B0_jsoo.web "min-clock-jsoo" ~doc ~srcs ~meta
-*)
+let examples =
+  test ~/"test/examples.ml" ~run:false ~doc:"Examples from the API docs"
 
 (* Packs *)
 

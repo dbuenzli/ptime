@@ -1,4 +1,7 @@
-(* This code is in the public domain *)
+(*---------------------------------------------------------------------------
+   Copyright (c) 2024 The ptime programmers. All rights reserved.
+   SPDX-License-Identifier: CC0-1.0
+  ---------------------------------------------------------------------------*)
 
 let get = function None -> assert false | Some v -> v
 let utc d t = get @@ Ptime.of_date_time (d, (t, 0))
