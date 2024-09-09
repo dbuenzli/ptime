@@ -6,6 +6,8 @@
 - Regularize naming structure. The `ptime.clock.os` library is deprecated. 
   Use `ptime.clock` instead.
 - Make the library `ptime.clock` export `ptime`.
+- Add `Ptime.weekday` type for naming the result of the  `Ptime.weekday`
+  function.
 
 v1.1.0 2022-12-02 Zagreb
 ------------------------

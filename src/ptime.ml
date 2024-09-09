@@ -459,6 +459,9 @@ let to_year ?(tz_offset_s = 0) t =
   in
   jd_to_year (d + jd_posix_epoch)
 
+
+type weekday = [ `Sun | `Mon | `Tue | `Wed | `Thu | `Fri | `Sat ]
+
 let weekday_num ?(tz_offset_s = 0) t =
   let (d, _) = Span.add t (Span.of_int_s tz_offset_s) in
   (* N.B. in contrast to [to_date_time] we don't care if we fall outside

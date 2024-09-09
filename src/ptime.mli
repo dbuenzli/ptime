@@ -371,9 +371,10 @@ val to_year : ?tz_offset_s:tz_offset_s -> t -> int
 
 (** {2:weekdays Week days} *)
 
-val weekday :
-  ?tz_offset_s:tz_offset_s -> t ->
-  [ `Sun | `Mon | `Tue | `Wed | `Thu | `Fri | `Sat ]
+type weekday = [ `Sun | `Mon | `Tue | `Wed | `Thu | `Fri | `Sat ]
+(** The type for the days of the 7-day week. *)
+
+val weekday : ?tz_offset_s:tz_offset_s -> t -> weekday
 (** [weekday ~tz_offset_s t] is the day in the 7-day week of timestamp [t]
     expressed in the time zone offset [ts_offset_s] (defaults to [0]). *)
 
