@@ -26,7 +26,7 @@ let ptime_clock_os_lib =
   B0_ocaml.deprecated_lib ~exports:[ptime_clock] ptime_clock_os
 
 let ptime_top_lib =
-  let srcs = [`File ~/"src/top/ptime_top.ml"] in
+  let srcs = [`Dir ~/"src/top"] in
   B0_ocaml.lib ptime_top ~srcs ~requires:[ptime; compiler_libs_toplevel]
 
 (* Tests *)
