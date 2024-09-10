@@ -14,17 +14,20 @@ let ptime_top = B0_ocaml.libname "ptime.top"
 
 (* Libraries *)
 
-let ptime_lib = B0_ocaml.lib ptime ~srcs:[`Dir ~/"src"]
+let ptime_lib =
+  let srcs = [`Dir ~/"src"; `X ~/"src/ptime_top_init.ml" ] in
+  B0_ocaml.lib ptime ~srcs
+
 let ptime_clock_lib =
   let srcs = [`Dir ~/"src/clock"] in
   B0_ocaml.lib ptime_clock ~srcs ~requires:[ptime] ~exports:[ptime]
 
-let ptime_top_lib =
-  let srcs = [`File ~/"src/top/ptime_top.ml"] in
-  B0_ocaml.lib ptime_top ~srcs ~requires:[compiler_libs_toplevel]
-
 let ptime_clock_os_lib =
   B0_ocaml.deprecated_lib ~exports:[ptime_clock] ptime_clock_os
+
+let ptime_top_lib =
+  let srcs = [`File ~/"src/top/ptime_top.ml"] in
+  B0_ocaml.lib ptime_top ~srcs ~requires:[ptime; compiler_libs_toplevel]
 
 (* Tests *)
 

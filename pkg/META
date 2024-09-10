@@ -33,7 +33,7 @@ package "top" (
   directory = "top"
   description = "The ptime.top library"
   version = "%%VERSION_NUM%%"
-  requires = "compiler-libs.toplevel"
+  requires = "ptime"
   archive(byte) = "ptime_top.cma"
   archive(native) = "ptime_top.cmxa"
   plugin(byte) = "ptime_top.cma"
