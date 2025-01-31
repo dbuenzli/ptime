@@ -1,0 +1,56 @@
+name: Build and Release ptime
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up OCaml
+        uses: ocaml/setup-ocaml@v3
+        with:
+          ocaml-compiler: '5.3.0'
+          dune-cache: true
+
+      - name: Install dependencies
+        run: opam install ocamlfind ocamlbuild topkg
+
+      - name: Pin and Install Project
+        run: |
+          opam pin add . --no-action
+          opam install .
+
+      - name: Retrieve and Package Source
+        run: |
+          opam source ptime
+          PACKAGE_NAME=$(basename $(ls -d ptime.* | head -n 1))
+          echo "Packaging directory: $PACKAGE_NAME"
+          tar -cjf ${PACKAGE_NAME}.tbz ${PACKAGE_NAME}
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ptime-package
+          path: "*.tbz"
+
+  release:
+    needs: package
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ptime-package
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: "*.tbz"
