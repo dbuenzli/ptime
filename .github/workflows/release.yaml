@@ -1,0 +1,60 @@
+name: Build and Release ptime
+
+on:
+  push:
+    branches:
+      - release
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up OCaml
+        uses: ocaml/setup-ocaml@v3
+        with:
+          ocaml-compiler: '5.3.0'
+          dune-cache: true
+
+      - name: Install dependencies
+        run: opam install . --deps-only --with-test
+
+      - name: Load OPAM Environment
+        run: eval $(opam env)
+
+      - name: Build project
+        run: opam exec -- dune build
+
+      - name: Run tests
+        run: opam exec -- dune runtest
+
+      - name: Package release
+        run: |
+          opam exec -- topkg distrib
+          mv _build/*.tbz ptime-${{ github.ref_name }}.tbz
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ptime-package
+          path: ptime-${{ github.ref_name }}.tbz
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ptime-package
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: "ptime-${{ github.ref_name }}.tbz"
