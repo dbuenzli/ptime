@@ -58,7 +58,7 @@ module T = struct
     (d, (t, 0)), tm.Unix.tm_wday
 
   let date_time_gmtime_witness ?__POS__:pos t =
-    let fail ?__POS__ n ~checks:_ =
+    let fail ?__POS__ n ~assertions:_ =
       Test.log_fail ?__POS__ "On stamp %g" (Ptime.to_float_s t)
     in
     Test.block ?__POS__:pos ~fail @@ fun () ->
