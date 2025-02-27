@@ -14,19 +14,19 @@ module T = struct
 
   let eq_raw_span =
     let raw_span ppf (d, ps) = Fmt.pf ppf "@[<1>(%d,@ %Ld)@]" d ps in
-    Test.Eq.make ~pp:raw_span ()
+    Test.T.make ~pp:raw_span ()
 
   let raw_span ?__POS__ = Test.eq ?__POS__ eq_raw_span
 
-  let eq_span = Test.Eq.make ~equal:Ptime.Span.equal ~pp:Ptime.Span.dump ()
+  let eq_span = Test.T.make ~equal:Ptime.Span.equal ~pp:Ptime.Span.dump ()
   let span ?__POS__ = Test.eq ?__POS__ eq_span
-  let span_option ?__POS__ = Test.option ?__POS__ ~some:eq_span
+  let span_option ?__POS__ = Test.option ?__POS__ eq_span
 
   (* Timestamps *)
 
-  let eq_stamp = Test.Eq.make ~equal:Ptime.equal ~pp:Ptime.dump ()
+  let eq_stamp = Test.T.make ~equal:Ptime.equal ~pp:Ptime.dump ()
   let stamp ?__POS__ = Test.eq ?__POS__ eq_stamp
-  let stamp_option ?__POS__ = Test.option ?__POS__ ~some:eq_stamp
+  let stamp_option ?__POS__ = Test.option ?__POS__ eq_stamp
 
   (* Dates *)
 

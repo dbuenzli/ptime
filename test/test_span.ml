@@ -6,16 +6,16 @@
 open B0_testing
 open Testing_ptime
 
-let p s = Ptime.Span.of_d_ps s |> Test.get_some
+let p s = Option.get (Ptime.Span.of_d_ps s)
 let n s = Ptime.Span.(neg (p s))
 let pps ps = p (0, ps)
 let nps ps = n (0, ps)
 
-let test_conversions () =
+let test_conversions =
   Test.test "span constants and conversions" @@ fun () ->
   (* Ints *)
   let trip_int ?__POS__ secs =
-    Test.option ?__POS__ ~some:Test.Eq.int
+    Test.option ?__POS__ Test.T.int
       Ptime.Span.(to_int_s (of_int_s secs)) (Some secs)
   in
   T.span ~__POS__ (Ptime.Span.of_int_s 0) Ptime.Span.zero;
@@ -32,7 +32,9 @@ let test_conversions () =
   trip_int ~__POS__ (0);
   (* Floats *)
   let trip_float ?__POS__ secs =
-    let of_float secs = Ptime.Span.of_float_s secs |> Test.get_some ?__POS__ in
+    let of_float secs =
+      Test.noraise ?__POS__ @@ fun () -> Option.get (Ptime.Span.of_float_s secs)
+    in
     Test.float ?__POS__ (Ptime.Span.to_float_s (of_float secs)) secs
   in
   T.span_option ~__POS__
@@ -67,7 +69,7 @@ let test_conversions () =
     (Ptime.Span.of_d_ps (23, 86_400_000_000_000_000L)) None;
   ()
 
-let test_predicates () =
+let test_predicates =
   Test.test "span predicates" @@ fun () ->
   Test.bool ~__POS__ (Ptime.Span.equal Ptime.Span.zero Ptime.Span.zero) true;
   Test.bool ~__POS__ (Ptime.Span.equal Ptime.Span.zero (pps 1L)) false;
@@ -87,7 +89,7 @@ let test_predicates () =
   Test.int ~__POS__ (Ptime.Span.compare (n (30, 3434L)) (p (30, 3433L))) (-1);
   ()
 
-let test_arithmetic () =
+let test_arithmetic =
   Test.test "span arithmetic" @@ fun () ->
   T.span ~__POS__
     (Ptime.Span.add (pps 86_399_999_999_999_999L) (pps 1L)) (p (1, 0L));
@@ -105,7 +107,7 @@ let test_arithmetic () =
     (Ptime.Span.abs (p (3, 342L))) (p (3, 342L));
   ()
 
-let test_rounding () =
+let test_rounding =
   Test.test "span rounding" @@ fun () ->
   let r ~frac a b =
     T.span ~__POS__ (Ptime.Span.round ~frac_s:frac (p (3, a))) (p (3, b));
@@ -191,7 +193,7 @@ let test_rounding () =
   t ~frac:13 86_399_999_999_999_999L 86_399_999_999_999_999L;
   ()
 
-let test_pretty_printing () =
+let test_pretty_printing =
   Test.test "span retty printing" @@ fun () ->
   let fmt s = Format.asprintf "%a" Ptime.Span.pp s in
   let n s = fmt @@ Ptime.Span.(neg (p s)) in

@@ -6,9 +6,10 @@
 open B0_testing
 open Testing_ptime
 
-let span_of_d_ps ?__POS__ s = Ptime.Span.of_d_ps s |> Test.get_some ?__POS__
+let span_of_d_ps ?__POS__ s =
+  Test.noraise ?__POS__ @@ fun () -> Option.get (Ptime.Span.of_d_ps s)
 
-let test_base () =
+let test_base =
   Test.test "stamp constants and base constructors" @@ fun () ->
   let of_span s = Ptime.(of_span (span_of_d_ps s)) in
   let get_of_span s = match of_span s with None -> assert false | Some s -> s in
@@ -62,7 +63,7 @@ let test_base () =
     (span_of_d_ps (0, 100_000_000_000L));
   ()
 
-let test_predicates () =
+let test_predicates =
   Test.test "stamp predicates" @@ fun () ->
   Test.bool ~__POS__ Ptime.(is_earlier min ~than:min) false;
   Test.bool ~__POS__ Ptime.(is_earlier min ~than:epoch) true;
@@ -84,7 +85,7 @@ let test_predicates () =
   Test.bool ~__POS__ Ptime.(is_later max ~than:max) false;
   ()
 
-let test_posix_arithmetic () =
+let test_posix_arithmetic =
   Test.test "stamp POSIX arithmetic" @@ fun () ->
   let span ps = span_of_d_ps (0, ps) in
   let nspan ps = Ptime.Span.(neg (span_of_d_ps (0, ps))) in
@@ -105,7 +106,9 @@ let test_posix_arithmetic () =
     let s = span_of_d_ps (0, Int64.abs ps) in
     Ptime.of_span (if ps < 0L then Ptime.Span.neg s else s)
   in
-  let get ?__POS__ s = of_span s |> Test.get_some ?__POS__ in
+  let get ?__POS__ s =
+    Test.noraise ?__POS__ @@ fun () -> Option.get (of_span s)
+  in
   let t0 = get ~__POS__ 20L in
   let t1 = get ~__POS__ 10L in
   let t2 = get ~__POS__ (-10L) in
@@ -115,7 +118,7 @@ let test_posix_arithmetic () =
   T.span ~__POS__ (Ptime.diff t0 t2) (span 30L);
   ()
 
-let test_truncation () =
+let test_truncation =
   Test.test "stamp truncation" @@ fun () ->
   let p ~frac_s t =
     let d1 = Ptime.(diff t min) |> Ptime.Span.truncate ~frac_s

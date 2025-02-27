@@ -46,14 +46,9 @@ let test_ptime =
   test ~/"test/test_ptime.ml" ~srcs ~requires:[unix]
 
 let test_gmtime =
-  let doc = "Test random stamps against Unix.gmtime" in
+  let doc = "Test stamps against Unix.gmtime" in
   let srcs = [testing_ptime] in
   test ~/"test/test_gmtime.ml" ~srcs ~requires:[unix] ~doc
-
-let test_gmtime_all =
-  let doc = "Test all second stamps against Unix.gmtime (very long)" in
-  let srcs = [testing_ptime;] in
-  test ~/"test/test_gmtime_all.ml" ~run:false ~srcs ~requires:[unix] ~doc
 
 let min_clock =
   let doc = "Minimal clock example" in

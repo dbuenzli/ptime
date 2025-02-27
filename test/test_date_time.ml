@@ -7,7 +7,7 @@ open B0_testing
 open Testing_ptime
 
 let stamp_of_date_time ?__POS__ d =
-  Ptime.of_date_time d |> Test.get_some ?__POS__
+  Test.noraise ?__POS__ @@ fun () -> Option.get (Ptime.of_date_time d)
 
 let valid_date_time ?__POS__ d =
   Test.holds ?__POS__ (Option.is_some (Ptime.of_date_time d))
@@ -15,7 +15,7 @@ let valid_date_time ?__POS__ d =
 let wrong_date_time ?__POS__ d =
   Test.holds ?__POS__ (Option.is_none (Ptime.of_date_time d))
 
-let test_time_bounds () =
+let test_time_bounds =
   Test.test "date-time time field bounds" @@ fun () ->
   let min_date = Ptime.to_date Ptime.min in
   let min_utc t = min_date, (t, 0) in
@@ -43,7 +43,7 @@ let test_time_bounds () =
   wrong_date_time ~__POS__ (min_utc (00, 00, 61));
   ()
 
-let test_tz () =
+let test_tz =
   Test.test "testing date-time time zone calculations" @@ fun () ->
   (* Timestamps with tz offsets around Ptime.{max,min} *)
   wrong_date_time ~__POS__ ((0000, 01, 01), ((00, 00, 00), +1));
@@ -72,14 +72,14 @@ let test_tz () =
     (Ptime.to_date_time ~tz_offset_s:lau_tz nyc_stamp) lausanne;
   ()
 
-let test_subsecond () =
+let test_subsecond =
   Test.test "subsecond stamp to date-time" @@ fun () ->
   let span_of_d_ps ?__POS__ s =
-    Ptime.Span.of_d_ps s |> Test.get_some ?__POS__
+    Test.noraise ?__POS__ @@ fun () -> Option.get (Ptime.Span.of_d_ps s)
   in
   let add, sub =
-    let add t ps = Ptime.(add_span t (span_of_d_ps (0, ps))) |> Test.get_some in
-    let sub t ps = Ptime.(sub_span t (span_of_d_ps (0, ps))) |> Test.get_some in
+    let add t ps = Ptime.(add_span t (span_of_d_ps (0, ps))) |> Option.get in
+    let sub t ps = Ptime.(sub_span t (span_of_d_ps (0, ps))) |> Option.get in
     add, sub
   in
   let b0 = sub Ptime.epoch 750_000_000_000L in
@@ -98,7 +98,7 @@ let test_subsecond () =
   T.date_time ~__POS__ a (Ptime.to_date_time a2);
   ()
 
-let test_leap_sec () =
+let test_leap_sec =
   Test.test "testing leap second date-times" @@ fun () ->
   let after_leap_sec = (1999, 01, 01), ((00, 00, 00), 0) in
   let t0 = stamp_of_date_time ((1998, 12, 31), ((23, 59, 59), 0)) in
@@ -114,9 +114,9 @@ let test_leap_sec () =
   T.span ~__POS__ (Ptime.diff t2 t1) (Ptime.Span.of_int_s 0);
   ()
 
-let test_stamp_trips () =
+let test_stamp_trips =
   Test.test "random stamps to date-time round trips" @@ fun () ->
-  let stamp_of_posix_s s = Ptime.of_float_s s |> Test.get_some in
+  let stamp_of_posix_s s = Option.get (Ptime.of_float_s s) in
   let trip ?tz_offset_s t =
     let back = stamp_of_posix_s (floor (Ptime.to_float_s t)) in
     let trip = stamp_of_date_time (Ptime.to_date_time ?tz_offset_s t) in
@@ -127,7 +127,7 @@ let test_stamp_trips () =
     trip ~tz_offset_s:(Rand.tz_offset_s ()) (Rand.float_stamp ())
   done
 
-let test_round_trips () =
+let test_round_trips =
   Test.test "random valid date-times to stamp round trips" @@ fun () ->
   let is_leap_sec = function
   | (_, _, _), ((_, _, 60), _) -> true
@@ -148,8 +148,8 @@ let test_round_trips () =
         end
   in
   let add_posix_s =
-    let span s = Ptime.Span.of_float_s s |> Test.get_some in
-    let add_posix_s t s = Ptime.(add_span t (span s)) |> Test.get_some in
+    let span s = Option.get (Ptime.Span.of_float_s s)in
+    let add_posix_s t s = Option.get (Ptime.(add_span t (span s))) in
     add_posix_s
   in
   for i = 1 to Rand.loop_len () do
@@ -173,7 +173,7 @@ let test_round_trips () =
   done;
   ()
 
-let test_weekday () =
+let test_weekday =
   Test.test "Ptime.{weekday_num,weekday}" @@ fun () ->
   let module Weekday = struct
     type t = Ptime.weekday

@@ -6,7 +6,7 @@
 open B0_testing
 open Testing_ptime
 
-let test_bounds () =
+let test_bounds =
   Test.test "calendar date field bounds" @@ fun () ->
   let valid_date ?__POS__ d =
     Test.holds ?__POS__ (Option.is_some (Ptime.of_date ?tz_offset_s:None d))
@@ -115,10 +115,11 @@ let test_bounds () =
   wrong_date ~__POS__ (2100, 02, 29);
   ()
 
-let test_stamp_trips () =
+let test_stamp_trips =
   Test.test "random valid dates to stamps round trips" @@ fun () ->
   let of_date ?__POS__ d =
-    Ptime.of_date ?tz_offset_s:None d |> Test.get_some ?__POS__
+    Test.noraise ?__POS__ @@ fun () ->
+    Option.get (Ptime.of_date ?tz_offset_s:None d)
   in
   for i = 1 to Rand.loop_len () do
     let date = Rand.date () in

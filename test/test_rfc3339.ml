@@ -7,12 +7,13 @@ open B0_std
 open B0_testing
 open Testing_ptime
 
-let stamp_of_s ?__POS__ v = Ptime.of_float_s v |> Test.get_some ?__POS__
+let stamp_of_s ?__POS__ v =
+  Test.noraise ?__POS__ @@ fun () -> Option.get (Ptime.of_float_s v)
 
-let test_stamp_conversions () =
+let test_stamp_conversions =
   Test.test "stamp to RFC 3339 conversions" @@ fun () ->
   let stamp_of_date_time ?__POS__ v =
-    Ptime.of_date_time v |> Test.get_some ?__POS__
+    Test.noraise ?__POS__ @@ fun () -> Option.get (Ptime.of_date_time v)
   in
   let dt ?space ?frac_s ?tz_offset_s dt =
     Ptime.to_rfc3339 ?space ?frac_s ?tz_offset_s (stamp_of_date_time dt)
@@ -79,7 +80,7 @@ let test_stamp_conversions () =
     (stamp ~frac_s:13 ~tz_offset_s:0 Ptime.min);
   ()
 
-let test_parse () =
+let test_parse =
   Test.test "RFC 3339 to stamp conversions" @@ fun () ->
   let test_result =
     let ok =
@@ -88,15 +89,15 @@ let test_parse () =
       in
       let pp ppf (t, tz, count) =
         Fmt.pf ppf "(%a, %a, %d)"
-          Ptime.dump t (Test.Fmt.option Fmt.int) tz count
+          Ptime.dump t (Fmt.Lit.option Fmt.int) tz count
       in
-      Test.Eq.make ~equal ~pp ()
+      Test.T.make ~equal ~pp ()
     in
     let error =
       let pp ppf = function `RFC3339 ((s, e), err) ->
         Fmt.pf ppf "@[<1>%d-%d:@ @[%a@]@]" s e Ptime.pp_rfc3339_error err
       in
-      Test.Eq.make ~pp ()
+      Test.T.make ~pp ()
     in
     fun ?__POS__ -> Test.result' ?__POS__ ~ok ~error
   in
@@ -249,10 +250,11 @@ let test_parse () =
     (ok (-3600.00) ~tz:(Some 3600) ~count:25);
   ()
 
-let test_stamp_trips () =
+let test_stamp_trips =
   Test.test "random stamps to RFC 3339 round trips" @@ fun () ->
   let stamp_of_rfc3339 ?__POS__ s =
-    Ptime.of_rfc3339 s |> Ptime.rfc3339_string_error |> Test.get_ok ?__POS__
+    Test.noraise ?__POS__ @@ fun () ->
+    Result.get_ok' (Ptime.of_rfc3339 s |> Ptime.rfc3339_string_error)
   in
   let trip ?__POS__:pos ?tz_offset_s t =
     let back = stamp_of_s ?__POS__:pos (floor (Ptime.to_float_s t)) in
