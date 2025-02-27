@@ -118,7 +118,8 @@ let test_bounds () =
 let test_stamp_trips () =
   Test.test "random valid dates to stamps round trips" @@ fun () ->
   let of_date ?__POS__ d =
-    Ptime.of_date ?tz_offset_s:None d |> Test.get_some ?__POS__
+    Test.noraise ?__POS__ @@ fun () ->
+    Option.get (Ptime.of_date ?tz_offset_s:None d)
   in
   for i = 1 to Rand.loop_len () do
     let date = Rand.date () in

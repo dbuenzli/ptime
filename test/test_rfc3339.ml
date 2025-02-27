@@ -7,12 +7,13 @@ open B0_std
 open B0_testing
 open Testing_ptime
 
-let stamp_of_s ?__POS__ v = Ptime.of_float_s v |> Test.get_some ?__POS__
+let stamp_of_s ?__POS__ v =
+  Test.noraise ?__POS__ @@ fun () -> Option.get (Ptime.of_float_s v)
 
 let test_stamp_conversions () =
   Test.test "stamp to RFC 3339 conversions" @@ fun () ->
   let stamp_of_date_time ?__POS__ v =
-    Ptime.of_date_time v |> Test.get_some ?__POS__
+    Test.noraise ?__POS__ @@ fun () -> Option.get (Ptime.of_date_time v)
   in
   let dt ?space ?frac_s ?tz_offset_s dt =
     Ptime.to_rfc3339 ?space ?frac_s ?tz_offset_s (stamp_of_date_time dt)
@@ -252,7 +253,8 @@ let test_parse () =
 let test_stamp_trips () =
   Test.test "random stamps to RFC 3339 round trips" @@ fun () ->
   let stamp_of_rfc3339 ?__POS__ s =
-    Ptime.of_rfc3339 s |> Ptime.rfc3339_string_error |> Test.get_ok ?__POS__
+    Test.noraise ?__POS__ @@ fun () ->
+    Result.get_ok' (Ptime.of_rfc3339 s |> Ptime.rfc3339_string_error)
   in
   let trip ?__POS__:pos ?tz_offset_s t =
     let back = stamp_of_s ?__POS__:pos (floor (Ptime.to_float_s t)) in

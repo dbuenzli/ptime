@@ -6,7 +6,8 @@
 open B0_testing
 open Testing_ptime
 
-let span_of_d_ps ?__POS__ s = Ptime.Span.of_d_ps s |> Test.get_some ?__POS__
+let span_of_d_ps ?__POS__ s =
+  Test.noraise ?__POS__ @@ fun () -> Option.get (Ptime.Span.of_d_ps s)
 
 let test_base () =
   Test.test "stamp constants and base constructors" @@ fun () ->
@@ -105,7 +106,9 @@ let test_posix_arithmetic () =
     let s = span_of_d_ps (0, Int64.abs ps) in
     Ptime.of_span (if ps < 0L then Ptime.Span.neg s else s)
   in
-  let get ?__POS__ s = of_span s |> Test.get_some ?__POS__ in
+  let get ?__POS__ s =
+    Test.noraise ?__POS__ @@ fun () -> Option.get (of_span s)
+  in
   let t0 = get ~__POS__ 20L in
   let t1 = get ~__POS__ 10L in
   let t2 = get ~__POS__ (-10L) in

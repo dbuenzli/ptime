@@ -19,7 +19,6 @@ let test_stamp_to_date_time () =
 
 let main () =
   Test.main @@ fun () ->
-  Test.Cli.parse ();
   test_stamp_to_date_time ();
   ()
 

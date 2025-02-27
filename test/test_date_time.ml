@@ -7,7 +7,7 @@ open B0_testing
 open Testing_ptime
 
 let stamp_of_date_time ?__POS__ d =
-  Ptime.of_date_time d |> Test.get_some ?__POS__
+  Test.noraise ?__POS__ @@ fun () -> Option.get (Ptime.of_date_time d)
 
 let valid_date_time ?__POS__ d =
   Test.holds ?__POS__ (Option.is_some (Ptime.of_date_time d))
@@ -75,11 +75,11 @@ let test_tz () =
 let test_subsecond () =
   Test.test "subsecond stamp to date-time" @@ fun () ->
   let span_of_d_ps ?__POS__ s =
-    Ptime.Span.of_d_ps s |> Test.get_some ?__POS__
+    Test.noraise ?__POS__ @@ fun () -> Option.get (Ptime.Span.of_d_ps s)
   in
   let add, sub =
-    let add t ps = Ptime.(add_span t (span_of_d_ps (0, ps))) |> Test.get_some in
-    let sub t ps = Ptime.(sub_span t (span_of_d_ps (0, ps))) |> Test.get_some in
+    let add t ps = Ptime.(add_span t (span_of_d_ps (0, ps))) |> Option.get in
+    let sub t ps = Ptime.(sub_span t (span_of_d_ps (0, ps))) |> Option.get in
     add, sub
   in
   let b0 = sub Ptime.epoch 750_000_000_000L in
@@ -116,7 +116,7 @@ let test_leap_sec () =
 
 let test_stamp_trips () =
   Test.test "random stamps to date-time round trips" @@ fun () ->
-  let stamp_of_posix_s s = Ptime.of_float_s s |> Test.get_some in
+  let stamp_of_posix_s s = Option.get (Ptime.of_float_s s) in
   let trip ?tz_offset_s t =
     let back = stamp_of_posix_s (floor (Ptime.to_float_s t)) in
     let trip = stamp_of_date_time (Ptime.to_date_time ?tz_offset_s t) in
@@ -148,8 +148,8 @@ let test_round_trips () =
         end
   in
   let add_posix_s =
-    let span s = Ptime.Span.of_float_s s |> Test.get_some in
-    let add_posix_s t s = Ptime.(add_span t (span s)) |> Test.get_some in
+    let span s = Option.get (Ptime.Span.of_float_s s)in
+    let add_posix_s t s = Option.get (Ptime.(add_span t (span s))) in
     add_posix_s
   in
   for i = 1 to Rand.loop_len () do

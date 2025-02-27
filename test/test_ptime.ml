@@ -7,7 +7,6 @@ open B0_testing
 
 let main () =
   Test.main @@ fun () ->
-  Test.Cli.parse ();
   Test_span.tests ();
   Test_base.tests ();
   Test_date.tests ();

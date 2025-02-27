@@ -6,7 +6,7 @@
 open B0_testing
 open Testing_ptime
 
-let p s = Ptime.Span.of_d_ps s |> Test.get_some
+let p s = Option.get (Ptime.Span.of_d_ps s)
 let n s = Ptime.Span.(neg (p s))
 let pps ps = p (0, ps)
 let nps ps = n (0, ps)
@@ -32,7 +32,9 @@ let test_conversions () =
   trip_int ~__POS__ (0);
   (* Floats *)
   let trip_float ?__POS__ secs =
-    let of_float secs = Ptime.Span.of_float_s secs |> Test.get_some ?__POS__ in
+    let of_float secs =
+      Test.noraise ?__POS__ @@ fun () -> Option.get (Ptime.Span.of_float_s secs)
+    in
     Test.float ?__POS__ (Ptime.Span.to_float_s (of_float secs)) secs
   in
   T.span_option ~__POS__
