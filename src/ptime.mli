@@ -521,7 +521,7 @@ val dump : Format.formatter -> t -> unit
     {!Ptime} does not provide any mean to convert the duration between
     two POSIX timestamps to SI seconds. The reason is that in order to
     accurately find this number, a
-    {{:http://www.ietf.org/timezones/data/leap-seconds.list}leap
+    {{:https://data.iana.org/time-zones/data/leap-seconds.list}leap
     second table} is needed. However since this table may change every
     six months, {!Ptime} decides not to include it so as not to
     potentially become incorrect every six months.
