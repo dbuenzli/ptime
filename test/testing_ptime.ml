@@ -59,7 +59,7 @@ module T = struct
 
   let date_time_gmtime_witness ?__POS__:pos t =
     let fail ?__POS__ n ~assertions:_ =
-      Test.log_fail ?__POS__ "On stamp %g" (Ptime.to_float_s t)
+      Test.Log.fail ?__POS__ "On stamp %g" (Ptime.to_float_s t)
     in
     Test.block ?__POS__:pos ~fail @@ fun () ->
     let dt, wday = gmtime_to_date_time t in
